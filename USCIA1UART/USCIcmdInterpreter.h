@@ -11,7 +11,7 @@
 
 #include <msp430.h>
 #include <stdio.h>// used ONLY for sprintf function
-#include <libUART1A.h>"
+#include <libUART1A.h>
 
 //#define ASYNCH
 #undef      ASYNCH                    // if defined, use the interrupts, else process commands as they are received
