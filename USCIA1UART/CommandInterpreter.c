@@ -108,6 +108,7 @@ volatile unsigned char gLineCnt =1;         // start at 1
 #endif
 
 
+
 void cmdRxIntFunc(char RXBUFF){
     if (!((lineInProgress == 2) || (gBufState == 2))){  // clear buffer but ignore user input when other code is printing error msg
         lineInProgress = 1;
