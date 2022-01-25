@@ -1,1 +1,1 @@
-"./CommandInterpreter.obj" "./USCIcmdInterpreter.obj" "../lnk_msp430f5529.cmd" -llibmath.a -llibc.a 
+"./CommandInterpreter.obj" "./USCIcmdInterpreter.obj" "../lnk_msp430f5529.cmd" -l"/Users/jamie/Documents/github/msp430/libUART1A/Release/libUART1A.lib" -llibmath.a -llibc.a 

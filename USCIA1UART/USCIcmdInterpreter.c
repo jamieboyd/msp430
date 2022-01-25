@@ -91,7 +91,7 @@ char strCmp (char * str1, char * str2){
 
 /************************************************************************************
 * Function: parseArg
-* -  parses a string representing a decimal hex value, returning the number as an unsigned char
+* -  parses a string representing a decimal, hex, or binay value, returning the number as a signed integer
 * - because any value can be good data, a pass-by-reference argument is needed for error reporting
 * Arguments: 2
 * argument 1: a null-terminated string containing the value
@@ -99,36 +99,60 @@ char strCmp (char * str1, char * str2){
 * returns: unsigned char corresponding to the value
 * Author: Jamie Boyd
 * Date: 2022/02/15
+* Modified:2022/02/23 by Jamie Boyd - now does 000110b style binary and checks for negative sign on decimals
 * ***********************************************************************************/
-int parseArg (char * aToken, char * err){
-    int tokLen, tokPos;
-    unsigned char power, rChar =0;
+signed int parseArg (char * aToken, char * err){
+    signed char tokLen, tokPos;
+    unsigned char power, decTokEnd;
+    signed int rVal =0;
     *err =0;
     for (tokLen = 0; *(aToken + tokLen) != '\0'; tokLen +=1){}; // find token length so we can work backwards
     if ((*aToken == '0') && (*(aToken + 1) == 'x')){ // we have hex digit, note the x is case sensitive
         for (power=1, tokPos = tokLen -1; tokPos >= 2; tokPos -=1, power *= 16){
             if ((*(aToken + tokPos) >= '0') && (*(aToken + tokPos) <= '9')){
-                rChar += (*(aToken + tokPos) - 48) * power;
+                rVal += (*(aToken + tokPos) - 48) * power;
             }else{
                 if ((*(aToken + tokPos) >= 'A') && (*(aToken + tokPos) <= 'F')){ // note case sensitive
-                    rChar += (*(aToken + tokPos) - 55) * power;
+                    rVal += (*(aToken + tokPos) - 55) * power;
                 }else{
                     *err = 5;    // error parsing number
                     break;
                 }
             }
         }
-    } else{     // we have decimal values
-        for (power=1, tokPos = tokLen-1; tokPos >= 0; tokPos -=1, power *= 10){
-           if ((*(aToken + tokPos) >= '0') && (*(aToken + tokPos) <= '9')){
-               rChar += (*(aToken + tokPos) - 48) * power;
-           }else{
-               *err =5; // error parsing number
-               break;
-           }
+    }else{
+        if(*(aToken + tokLen-1) == 'b'){    // we have binary values, not the b is case sensitive
+            for (power=1, tokPos = tokLen-2; tokPos >= 0; tokPos -=1, power *= 2){
+                if (*(aToken + tokPos) == '1') {
+                    rVal += power;
+                }else{
+                   if (*(aToken + tokPos) != '0'){
+                       *err = 5;
+                       break;
+                   }
+                }
+            }
+        } else{     // we have decimal values
+            if (*aToken == '-'){
+                decTokEnd = 1;      // negative value
+            }else{
+                decTokEnd = 0;
+            }
+
+            for (power=1, tokPos = tokLen-1; tokPos >= decTokEnd; tokPos -=1, power *= 10){
+               if ((*(aToken + tokPos) >= '0') && (*(aToken + tokPos) <= '9')){
+                   rVal += (*(aToken + tokPos) - 48) * power;
+               }else{
+                   *err =5; // error parsing number
+                   break;
+               }
+            }
+            if (decTokEnd == 1){
+                rVal *= -1;
+          }
         }
     }
-    return rChar;     // data will only be valid if *err is 0
+    return rVal;     // data will only be valid if *err is 0
 }
 
 /************************************************************************************
@@ -137,11 +161,11 @@ int parseArg (char * aToken, char * err){
 * Arguments: 2
 * argument 1: cmdList - the list of commands with names
 * argument 2: a name
-* returns: index of command with mayching name, or -1 if no match was found
+* returns: index of command with matching name, or -1 if no match was found
 * Author: Jamie Boyd
 * Date: 2022/02/10
 ************************************************************************************/
-int validateCmd(CMD * cmdList ,char * cmdName) {
+signed char validateCmd(CMD * cmdList ,char * cmdName) {
     char ii;
     int cmdIndex = -1;
     for (ii =0; ii < MAX_CMDS; ii +=1){
@@ -164,7 +188,7 @@ int validateCmd(CMD * cmdList ,char * cmdName) {
 * Author: Jamie Boyd
 * Date: 2022/02/10
 ************************************************************************************/
-int parseCmd(CMD * cmdList, char * cmdLine){
+signed char parseCmd(CMD * cmdList, char * cmdLine){
     char * contextPtr = NULL;
     char * aToken = strTok (cmdLine, &contextPtr); // first token contains command name.
     unsigned char iArg;
@@ -212,7 +236,7 @@ int parseCmd(CMD * cmdList, char * cmdLine){
 * Author: Jamie Boyd
 * Date: 2022/02/10
 ************************************************************************************/
-int executeCmd(CMD * cmdList, char cmdIndex){
+signed char executeCmd(CMD * cmdList, char cmdIndex){
     int rVal = 0;       // value to return
     unsigned char pNum, mask, dir, state, p3Byte;
     if ((cmdIndex ==0) || (cmdIndex ==1)){

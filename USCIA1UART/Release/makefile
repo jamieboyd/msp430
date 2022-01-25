@@ -12,6 +12,7 @@ ORDERED_OBJS += \
 "./USCIcmdInterpreter.obj" \
 "../lnk_msp430f5529.cmd" \
 $(GEN_CMDS__FLAG) \
+-l"/Users/jamie/Documents/github/msp430/libUART1A/Release/libUART1A.lib" \
 -llibmath.a \
 -llibc.a \
 
@@ -140,7 +141,7 @@ all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 CommandInterpreter.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: MSP430 Linker'
-	"/Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/bin/cl430" -vmspx --data_model=restricted -O2 --use_hw_mpy=F5 --advice:power=all --define=__MSP430F5529__ --printf_support=minimal --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU23 --silicon_errata=CPU40 -z -m"CommandInterpreter.map" --heap_size=160 --stack_size=160 --cinit_hold_wdt=on -i"/Applications/ti/ccs1010/ccs/ccs_base/msp430/include" -i"/Applications/ti/ccs1010/ccs/ccs_base/msp430/lib/5xx_6xx_FRxx" -i"/Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/lib" -i"/Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="CommandInterpreter_linkInfo.xml" --use_hw_mpy=F5 --rom_model -o "CommandInterpreter.out" $(ORDERED_OBJS)
+	"/Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/bin/cl430" -vmspx --data_model=restricted -O2 --use_hw_mpy=F5 --advice:power=all --define=__MSP430F5529__ --printf_support=minimal --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU23 --silicon_errata=CPU40 -z -m"CommandInterpreter.map" --heap_size=160 --stack_size=160 --cinit_hold_wdt=on -i"/Users/jamie/Documents/github/msp430/libUART1A/Release" -i"/Applications/ti/ccs1010/ccs/ccs_base/msp430/include" -i"/Applications/ti/ccs1010/ccs/ccs_base/msp430/lib/5xx_6xx_FRxx" -i"/Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/lib" -i"/Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="CommandInterpreter_linkInfo.xml" --use_hw_mpy=F5 --rom_model -o "CommandInterpreter.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 

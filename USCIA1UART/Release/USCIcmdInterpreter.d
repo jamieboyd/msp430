@@ -14,6 +14,7 @@ USCIcmdInterpreter.obj: /Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp43
 USCIcmdInterpreter.obj: /Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/include/sys/_types.h
 USCIcmdInterpreter.obj: /Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/include/sys/cdefs.h
 USCIcmdInterpreter.obj: /Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/include/machine/_types.h
+USCIcmdInterpreter.obj: /Users/jamie/Documents/github/msp430/libUART1A/libUART1A.h
 
 ../USCIcmdInterpreter.c:
 
@@ -42,4 +43,6 @@ USCIcmdInterpreter.obj: /Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp43
 /Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/include/sys/cdefs.h:
 
 /Applications/ti/ccs1010/ccs/tools/compiler/ti-cgt-msp430_20.2.5.LTS/include/machine/_types.h:
+
+/Users/jamie/Documents/github/msp430/libUART1A/libUART1A.h:
 

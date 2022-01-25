@@ -43,14 +43,13 @@ extern char msgStr [50];
 // needed string functions
 char * strTok (char * stringWithSeps, char** contextP);
 char strCmp (char * str1, char * str2);
-int parseArg (char * aToken, char * err);
+signed int parseArg (char * aToken, char * err);
 
 void initCmds (CMD * cmdList);
-int parseCmd(CMD * cmdList, char * cmdLine);
-int validateCmd(CMD * cmdList, char * cmdName);
-int executeCmd(CMD * cmdList, char cmdIndex);
+signed char parseCmd(CMD * cmdList, char * cmdLine);
+signed char validateCmd(CMD * cmdList, char * cmdName);
+signed char executeCmd(CMD * cmdList, char cmdIndex);
 void printErr (void);
-
 
 
 #ifdef ASYNCH
