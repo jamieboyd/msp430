@@ -169,7 +169,7 @@ unsigned char  nokLcdSetPixel(unsigned char xPos, unsigned char yPos) {
 * Date: Feb 20th, 2017
 * Modified: <date of any mods> usually taken care of by rev control
 ************************************************************************************/
-unsigned char nokLcdClearSetPixel(unsigned char xPos, unsigned char yPos, unsigned char isClearNotSet) {
+unsigned char nokLcdClearPixel(unsigned char xPos, unsigned char yPos) {
     unsigned char bank; // a bank is a group of 8 rows, selected by 8 bits in a byte
 
     // verify pixel position is valid
@@ -188,11 +188,7 @@ unsigned char nokLcdClearSetPixel(unsigned char xPos, unsigned char yPos, unsign
         nokLcdWrite(LCD_SET_YRAM | bank, DC_CMD);
 
         // update the pixel being set in currentPixelDisplay array
-        if (isClearNotSet){
-            currentPixelDisplay[xPos][bank] &= ~(BIT0 << (yPos % LCD_ROW_IN_BANK)); // i.e if yPos = 7 then BIT0 is left shifted 7 positions to be 0x80. nice
-        }else{
-            currentPixelDisplay[xPos][bank] |= (BIT0 << (yPos % LCD_ROW_IN_BANK)); // i.e if yPos = 7 then BIT0 is left shifted 7 positions to be 0x80. nice
-        }
+        currentPixelDisplay[xPos][bank] &= ~(BIT0 << (yPos % LCD_ROW_IN_BANK)); // i.e if yPos = 7 then BIT0 is left shifted 7 positions to be 0x80. nice
         nokLcdWrite(currentPixelDisplay[xPos][bank], DC_DAT); // write the data. this is DATA DC_DAT
         return 0;
     }
@@ -219,6 +215,7 @@ signed char nokLcdDrawScrnLine (unsigned char linePos, unsigned char isVnotH){
             return -1;
         }
         nokLcdWrite(32, DC_CMD); // horizontal line, trickier
+        nokLcdWrite(LCD_SET_XRAM, DC_CMD);
         if (linePos<8) bank = 0;
         else if (linePos<16) bank = 1;
         else if (linePos<24) bank = 2;
@@ -237,7 +234,7 @@ signed char nokLcdDrawScrnLine (unsigned char linePos, unsigned char isVnotH){
 
 signed char nokLcdDrawLine (unsigned char xStart, unsigned char yStart, unsigned char xEnd, unsigned char yEnd){
 
-    if ((xStart > 83) || (xEnd > 83) ||  (yStart > 47) || (yEnd < 47)){
+    if ((xStart > 83) || (xEnd > 83) ||  (yStart > 47) || (yEnd > 47)){
         return -1;
     }
     signed char xPos;    // use ints to guarantee promotion for intermediate math

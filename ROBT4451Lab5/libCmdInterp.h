@@ -16,7 +16,7 @@
 #ifndef     NULL
 #define     NULL            0
 #endif
-#define     MAX_CMDS        7       // many more to come, I'm sure
+#define     MAX_CMDS        8       // many more to come, I'm sure
 #define     CMD_LEN         16      // long enough for longest command with spaces and arguments
 #define     MAX_ARGS        4       // nokLine has 4
 
@@ -35,7 +35,8 @@
 #define     CMD5_NARGS      2           // (unsigned char linePos, unsigned char isVnotH)
 #define     CMD6            "nokLine\0"   // draw a line from anywhere
 #define     CMD6_NARGS      4           //  (unsigned char xStart, unsigned char yStart, unsigned char xEnd, unsigned char yEnd)
-
+#define     CMD7            "nokClearPix\0"
+#define     CMD7_NARGS      2
 
 
 typedef struct CMD {               // defines a command

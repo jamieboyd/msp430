@@ -120,6 +120,6 @@ signed char nokLcdDrawScrnLine (unsigned char linePos, unsigned char isYnotX);
 
 signed char nokLcdDrawLine (unsigned char xStart, unsigned char yStart, unsigned char xEnd, unsigned char yEnd);
 
-unsigned char nokLcdClearSetPixel(unsigned char xPos, unsigned char yPos, unsigned char isClearNotSet);
+unsigned char nokLcdClearPixel(unsigned char xPos, unsigned char yPos);
 
 #endif /* nok5110LCD_H_ */

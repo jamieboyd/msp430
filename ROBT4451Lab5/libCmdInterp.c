@@ -49,6 +49,9 @@ void initCmds (CMD * cmdList){
     cmdList[5].nArgs = CMD5_NARGS;
     cmdList[6].name = CMD6;
     cmdList[6].nArgs = CMD6_NARGS;
+    cmdList[7].name = CMD7;
+    cmdList[7].nArgs = CMD7_NARGS;
+
 }
 
 /************************************************************************************
@@ -471,8 +474,15 @@ signed char executeCmd(CMD * cmdList, char cmdIndex){
            }else{
                rVal = 6;
            }
-
-
+           break;
+       case 7:  // nokClearPix
+           if (nokLcdClearPixel ((unsigned char)cmdList[cmdIndex].args[0], (unsigned char)cmdList[cmdIndex].args[1]) == 1){
+               rVal = -1;
+               gError = 7;
+           }else{
+               rVal = 6;
+           }
+           break;
     }
     return rVal;
 }
