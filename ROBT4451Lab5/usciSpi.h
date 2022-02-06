@@ -49,12 +49,6 @@ extern char uartRxBuffer [];
 extern unsigned char spiTxBuffer [];
 extern unsigned char spiRxBuffer [];
 
-// define which part of the lab to compile and run
-#define  SPI_QUEST              // a quest to determine timing of first bit on MOSI with UCCKPHUCCKPL 1,0
-#undef   SECTION_521             // SPI transmit characters using interrupt
-#undef   SECTION_52x             // transmit chain simple (5.22) or with /SS (5.23, or with loopback (5.24)
-#undef   SECTION_523             // 5.23 transmit chain with /SS, define SECTION_52X as well
-#undef   SECTION_524             // 5.24 now with loopback.  define SECTION_52X as well
 
 
 /******************************* Function Headers **********************************/

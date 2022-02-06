@@ -1,7 +1,7 @@
 ******************************************************************************
                   MSP430 Linker Unix v20.2.5                   
 ******************************************************************************
->> Linked Mon Jan 24 02:08:22 2022
+>> Linked Tue Jan 25 18:30:36 2022
 
 OUTPUT FILE NAME:   <CommandInterpreter.out>
 ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 00004424

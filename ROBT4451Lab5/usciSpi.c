@@ -68,13 +68,11 @@ void usciB1SpiInit(unsigned char spiMST, unsigned int sclkDiv, unsigned char scl
 	UCB1CTL0 |= UCSYNC;                      //  Synchronous mode enabled, no UART here
 
 	// configure the SPI B1 pins with PxSEL register to select peripherals
-	//P4SEL |= (SPI_MOSI | SPI_CLK);
 	P4SEL |= (SPI_MISO | SPI_MOSI | SPI_CLK);
-#ifdef SECTION_523
-	// configure a SPI /SS line on P6.0
-	P6DIR |= 1;
-	P6OUT |= 1; // idles high, asserts low
-#endif
+	//P4SEL |= ( SPI_MOSI | SPI_CLK);
+	// configure a SPI /SS line on P4.0
+	P4DIR |= BIT0;
+	P4OUT |= BIT0; // idles high, asserts low
 	UCB1CTL1 &= ~UCSWRST;                     	// **Initialize USCI state machine**  take it out of reset
 }
 
@@ -94,19 +92,6 @@ void usciB1SpiClkDiv(unsigned int sclkDiv, unsigned char doReset){
     UCB1BR0 = (sclkDiv & 0xFF);                 // UCB1BR0 is the low byte. ANDing with 255 removes the high byte
     UCB1BR1 = (sclkDiv >> 8);                   // UCB1BR0 is the high byte. right shifting 8 bits replaces low bye with high byte
     if (doReset) UCB1CTL1 &= ~UCSWRST;          // **Initialize USCI state machine**
-}
-
-/**************************** Function: strLen ********************************
- * returns the length of a null-terminated string
- * Arguments: 1
- * argument 1: the string
- * returns: length of the stirng
- * Author: Jamie Boyd
- * Date: 2022/01/23 */
-unsigned char strLen (char * strBuffer){
-    unsigned char rVal =0;
-    for (rVal = 0; *(strBuffer + rVal) != '\0'; rVal +=1){};
-    return rVal;
 }
 
 
@@ -136,19 +121,15 @@ unsigned char numStringToInt (unsigned char * rxStr, unsigned char * txBuff){
 */
 void usciB1SpiTXBuffer (const unsigned char * buffer, int bufLen){
     unsigned char iBuf;
-#ifdef SECTION_523
-    P6OUT &= ~1;
-#endif
+    P4OUT &= ~BIT0;
     for (iBuf =0; iBuf < bufLen; iBuf +=1){
         usciB1SpiPutChar(buffer[iBuf]);
     }
-#ifdef SECTION_523
     while (!(UCB1IFG & UCTXIFG)){};   // poll, waiting for an opportunity to send. THis means last byte has been moved into shift register
     UCB1IFG &= ~UCRXIFG;              // Clear receive flag cause it will be set because we never read RXBUF
     while (!(UCB1IFG & UCRXIFG)){};   // poll, waiting while last bit in last byte to be received. Now transfer is complete
     UCB1IFG &= ~UCRXIFG;              // Always a good idea to clear the flag
-    P6OUT |= 1;                       // un-assert
-#endif
+    P4OUT |= BIT0;                       // un-assert
 }
 
 // when the TXBUFFER is ready load it.    txByte-->TXBUFFER

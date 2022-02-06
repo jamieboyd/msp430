@@ -4,7 +4,7 @@
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROGRAM.MSP430F5529.ccxml.TI MSP430 USB1/MSP430" value="${build_artifact:usciB1}"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROJECT.MSP430F5529.ccxml.TI MSP430 USB1/MSP430" value="usciB1"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_TARGET_CONFIG" value="${target_config_active_default:usciB1}"/>
-<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.MSP430F5529.ccxml.TI MSP430 USB1/MSP430" value="/Users/jamie/workspace_v10/usciB1/Debug/usciB1.out"/>
+<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.MSP430F5529.ccxml.TI MSP430 USB1/MSP430" value="/Users/jamie/Documents/github/msp430/usciB1/Debug/usciB1.out"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/usciB1"/>
 </listAttribute>
