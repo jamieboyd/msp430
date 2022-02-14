@@ -59,13 +59,13 @@ extern unsigned char spiRxBuffer [];
 
 /******************************* Function Headers **********************************/
 /* Function: usciB1SpiInit
-* - configures USI B1 when used as an SPI controller
+* - configures USI B1 when used as an SPI controller. NOTE: this code does not do slave select - for that you are on your own
 * Arguments: 3
 * argument 1: spiMST – if 0 the USCIB1 is configured as a slave, otherwise it is a master.
 * argument 2: sclkDIV – defines the 16 bit clock divisor used to divide 2^20 Hz SMCLK, which is used as the clock source
 * argument 3: sclkMode – clock mode. bit 0 is clock polarity, bit 1 is phase. 0-3 are valid arguments
 * return: nothing
-* Sample use: usciB1SpiInit(1, 48, 1, unsigned char spiLoopBack)
+* Sample use: usciB1SpiInit(1, 48, 1, 0)
 * Author: Jamie Boyd
 * Date: 2022/01/23 */
 void usciB1SpiInit(unsigned char spiMST, unsigned int sclkDiv, unsigned char sclkMode, unsigned char spiLoopBack);

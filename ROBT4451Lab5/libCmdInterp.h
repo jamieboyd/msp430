@@ -16,7 +16,7 @@
 #ifndef     NULL
 #define     NULL            0
 #endif
-#define     MAX_CMDS        8       // many more to come, I'm sure
+#define     MAX_CMDS        14       // many more to come, I'm sure
 #define     CMD_LEN         16      // long enough for longest command with spaces and arguments
 #define     MAX_ARGS        4       // nokLine has 4
 
@@ -37,12 +37,24 @@
 #define     CMD6_NARGS      4           //  (unsigned char xStart, unsigned char yStart, unsigned char xEnd, unsigned char yEnd)
 #define     CMD7            "nokClearPix\0"
 #define     CMD7_NARGS      2
+#define     CMD8            "fediHome\0"
+#define     CMD8_NARGS      1
+#define     CMD9            "fediClr\0"
+#define     CMD9_NARGS      0
+#define     CMD10           "fediRead\0"
+#define     CMD10_NARGS      1
+#define     CMD11            "fediDisp\0"
+#define     CMD11_NARGS      1
+#define     CMD12           "fediFw\0"
+#define     CMD12_NARGS      0
+#define     CMD13           "fediZero\0"
+#define     CMD13_NARGS      0
 
 
 typedef struct CMD {               // defines a command
     const char *name;             // pointer will point to string literals #defined above
     int nArgs;          // number of input arguments for a command
-    int args[MAX_ARGS]; // all interpreted as unsigned though
+    signed int args[MAX_ARGS]; // if signed ints don't float your boat, too bad. Consistency is needed
 }CMD;
 
 

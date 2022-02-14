@@ -24,6 +24,9 @@
 
 #ifndef NULL                                            // NULL is defined in stdint.h, but it the only thing we use from there
 #define NULL 0
+
+#define LONG_INT_DEC_PLACES 10    // biggest signed long int is a 10 digit number used to TX a big decimal number
+
 #endif
 
 /******************************* Function Headers **********************************/
@@ -52,7 +55,6 @@ void usciA1UartTxChar(char txChar);
 * - writes a C string of characters, one char at a time to UCA1TXBUF by calling
 *   usciA1UartTxChar. Stops when it encounters the NULL character in the string
 *   does NOT transmit the NULL character
-* argument:
 * Arguments:1
 * argument1: txChar - pointer to char (string) to be transmitted
 * return: number of characters transmitted
@@ -60,6 +62,17 @@ void usciA1UartTxChar(char txChar);
 * Date: March 1st, 2017
 * Modified: 2022/01/10 by Jamie Boyd */
 int usciA1UartTxString(char* txChar);
+
+
+/*Function: usciA1UartTxLongInt
+* - writes a string representation of a long integer by doing the string
+* conversion into a buffer and then calling usciA1UartTxBuffer.
+* Arguments:1
+* argument1: cntVal - a signed long integer to be transmitted
+* return: nothing
+* Author: Jamie Boyd
+* Date:2022/02/10  */
+void usciA1UartTxLongInt (signed long cntVal);
 
 /* Function: usciA1UartTxBuffer
 * - transmits bufLen characters from a text buffer

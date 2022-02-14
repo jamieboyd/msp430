@@ -11,9 +11,9 @@
 //  8-LIGHT  	-->  	no connection necassary unless you want it on
 //  7-SCLK  	-->  	MS430EVM  P4.3 or UCB1CLK
 //  6-DN(MOSI)  -->  	MS430EVM  P4.1 or UCB1SIMO
-//  5-D/C'  	-->  	MS430EVM  P4.2. 	Kept as I/O pin !!
+//  5-D/C'  	-->  	MS430EVM  P6.1 	Standard I/O pin
 //  4-RST'  	-->  	MS430EVM or supply VSS.  Can tie to I/O pin if user wants. data sheet says RESET is necassary .. but?
-//  3-SCE'  	-->  	MS430EVM  P4.0. chip select 	Kept as I/O pin !!
+//  3-SCE'  	-->  	MS430EVM  P4.0. chip select 	Kept as I/O pin cause we do slave selection from user code
 //  2-GND  		-->  	MS430EVM or supply VSS
 //  1-VCC  		-->  	MS430EVM or supply 3V3
 
@@ -23,9 +23,18 @@
 
 // nok5110 pin --> msp430 PORT4 bit position
 #define SCLK  	BIT3        // P4.3 configured by usciSPI
-#define DAT_CMD BIT2        // P4.2
 #define SIMO 	BIT1        // P4.1 configured by usciSPI
-#define	SCE   	BIT0        // P4.0
+
+// Macro to set user-selectable pins for non-standard data/~command signal and slave select pins to GPIO out
+#define _NOK_LCD_DIR_PINS P6SEL &= ~BIT1; P6DIR |= BIT1; P4SEL &= ~BIT0; P4DIR |= BIT0;
+
+// Macros to toggle user defined pin for Data/Command signal. Here we choose port 6 pin 1
+#define _NOK_LCD_SET_CMD P6OUT &= ~BIT1
+#define _NOK_LCD_SET_DATA P6OUT |= BIT1
+
+// Macros to toggle user defined slave select pin. Here we choose port 4 pin 0. Make sure other devices use different SS pin
+#define _NOK_LCD_SLAVE_SELECT   P4OUT &= ~BIT0    // slave select is active low
+#define _NOK_LCD_SLAVE_FREE     P4OUT |= BIT0
 
 // constants for cmdType argument passed to the nokLcdWrite function
 #define DC_CMD  0	// command control
@@ -34,6 +43,7 @@
 // NOKIA 5110 LCD row,col MAX
 #define LCD_MAX_COL 84  	// 	max # of columns.  84 pixels in x direction
 #define LCD_MAX_ROW 48     	// 	max # of row.  48 pixels in y direction
+#define LCD_ROW_IN_BANK 8       // 8 rows in a bank. 6 banks, so  8x6 = 48 rows of pixels. y coordinate
 
 // NOKIA 5110 LCD controller instructions for initialization
 #define LCD_NORMAL_DISP      	0x0C // normal display control bit 3 for command + bit 2 for D
@@ -41,13 +51,10 @@
 #define LCD_BASIC_INSTR      	0x20 // enable basic instruction set
 #define LCD_SET_SYSBIAS       	0x13 // set system bias mode
 #define LCD_SET_OPVOLT     		0xBC // set operation voltage for contrast ctrl
-#define LCD_SET_TEMPCTRL       	0x06  // set coeff 2  //THE HECK IT DOES SHOULD BE 6 FOR 2
+#define LCD_SET_TEMPCTRL       	0x06  // set coeff 2
 #define LCD_SET_YRAM          	0x40 // set Y address of RAM
 #define LCD_SET_XRAM          	0x80 // set X address of RAM
 
-
-#define LCD_ROW_IN_BANK 8 	    // 8 rows in a bank. 6 banks, so  8x6 = 48 rows of pixels. y coordinate
-//#define _NOK_LCD_RST P2OUT &= ~BIT3; P2OUT |= BIT3 // reset strobe
 
 
 
@@ -118,8 +125,12 @@ void spiTxByte(char txData);
 
 signed char nokLcdDrawScrnLine (unsigned char linePos, unsigned char isYnotX);
 
-signed char nokLcdDrawLine (unsigned char xStart, unsigned char yStart, unsigned char xEnd, unsigned char yEnd);
+signed char nokLcdDrawLine (unsigned char xStart, unsigned char yStart, unsigned char xEnd, unsigned char yEnd, unsigned char color);
 
 unsigned char nokLcdClearPixel(unsigned char xPos, unsigned char yPos);
+
+void nokDrawBar (unsigned char bank, unsigned char color);
+void nokIncrBar (unsigned char bank, unsigned char startX, unsigned char endX);
+void nokDecrBar (unsigned char bank, unsigned char startX, unsigned char endX);
 
 #endif /* nok5110LCD_H_ */

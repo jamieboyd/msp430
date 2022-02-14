@@ -14,6 +14,7 @@
 #include "libUART1A.h"
 
 char rxBuffer [RX_BUF_SZ]; // buffer that receive data from usciA1UARTgets. referenced in header so can be accessed easily
+char intBuffer [LONG_INT_DEC_PLACES + 1];
 void (*rxIntFuncPtr)(char) = NULL; // pointer to function to run to get a byte from RXBUFF
 char (*txIntFuncPtr)(void) = NULL; // pointer to function to run to transfer a byte into TXBUFF
 
@@ -137,6 +138,30 @@ int usciA1UartTxBuffer (char * buffer, unsigned int bufLen){
     }
     return ii;
 }
+
+/******************** usciA1UartTxLongInt **********************************************
+* - writes a string representation of the decimal value of a long integer by doing the string
+* conversion into a buffer and then calling usciA1UartTxBuffer.
+* Arguments:1
+* argument1: cntVal - a signed long integer to be transmitted
+* return: nothing
+* Author: Jamie Boyd
+* Date:2022/02/10  */
+void usciA1UartTxLongInt (signed long cntVal){
+    unsigned int strPos;
+    if (cntVal < 0){
+        intBuffer [0] = '-';
+        cntVal *= -1;
+    } else{
+        intBuffer [0] = '+';
+    }
+    for (strPos = LONG_INT_DEC_PLACES; strPos > 0; strPos--){
+        intBuffer [strPos] = '0' + (cntVal % 10);
+        cntVal /= 10;
+    }
+    usciA1UartTxBuffer (intBuffer, LONG_INT_DEC_PLACES + 1);
+}
+
 
 /************************************************************************************
 * Function: usciA1UartGets

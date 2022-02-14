@@ -9,6 +9,7 @@
  **************************************************************************************************/
 #include "libCmdInterp.h"
 #include "nok5110LCD.h"
+#include "fedi.h"
 
 volatile unsigned char gCmdCnt;                // number of command being processed = number of command just entered
 volatile unsigned char gError = 0;             // flag to be set to an error condition, there are 8, including 0-no error
@@ -51,6 +52,18 @@ void initCmds (CMD * cmdList){
     cmdList[6].nArgs = CMD6_NARGS;
     cmdList[7].name = CMD7;
     cmdList[7].nArgs = CMD7_NARGS;
+    cmdList[8].name = CMD8;
+    cmdList[8].nArgs = CMD8_NARGS;
+    cmdList[9].name = CMD9;
+    cmdList[9].nArgs = CMD9_NARGS;
+    cmdList[10].name = CMD10;
+    cmdList[10].nArgs = CMD10_NARGS;
+    cmdList[11].name = CMD11;
+    cmdList[11].nArgs = CMD11_NARGS;
+    cmdList[12].name = CMD12;
+    cmdList[12].nArgs = CMD12_NARGS;
+    cmdList[13].name = CMD13;
+    cmdList[13].nArgs = CMD13_NARGS;
 
 }
 
@@ -130,12 +143,14 @@ unsigned char strLen (char * strBuffer){
 * argument 2: a pass-by-reference value to set if an error occurs
 * returns: signed int corresponding to the value
 * Author: Jamie Boyd
-* Date: 2022/02/15
-* Modified:2022/02/23 by Jamie Boyd - now does 000110b style binary and checks for negative sign on decimals
+* Date: 2022/01/15
+* Modified:2022/01/23 by Jamie Boyd - now does 000110b style binary and checks for negative sign on decimals
+* Modified:2022/02/14 by Jamie Boyd - made power an unsigned int to enable larger values
 * ***********************************************************************************/
 signed int parseArg (char * aToken, char * err){
     signed char tokLen, tokPos;
-    unsigned char power, decTokEnd;
+    unsigned char decTokEnd;
+    unsigned int power;
     signed int rVal =0;
     *err =0;
     for (tokLen = 0; *(aToken + tokLen) != '\0'; tokLen +=1){}; // find token length so we can work backwards
@@ -468,7 +483,7 @@ signed char executeCmd(CMD * cmdList, char cmdIndex){
            break;
 
        case 6:  //nokLine
-           if (nokLcdDrawLine ((unsigned char)cmdList[cmdIndex].args[0], (unsigned char)cmdList[cmdIndex].args[1], (unsigned char)cmdList[cmdIndex].args[2], (unsigned char)cmdList[cmdIndex].args[3]) == -1){
+           if (nokLcdDrawLine ((unsigned char)cmdList[cmdIndex].args[0], (unsigned char)cmdList[cmdIndex].args[1], (unsigned char)cmdList[cmdIndex].args[2], (unsigned char)cmdList[cmdIndex].args[3], 1) == -1){
                rVal = -1;
                gError = 7;
            }else{
@@ -480,9 +495,46 @@ signed char executeCmd(CMD * cmdList, char cmdIndex){
                rVal = -1;
                gError = 7;
            }else{
-               rVal = 6;
+               rVal = 7;
            }
            break;
+
+       case 8:  // fediHome
+           if (fediHome (cmdList[cmdIndex].args[0])){
+               rVal = -1;
+               gError = 7;
+           }else{
+               rVal = 8;
+           }
+           break;
+       case 9:  // fediClr
+           fediClr ();  // does not generate errors
+           rVal = 9;
+           break;
+       case 10:     //fediRead
+           if (fediRead ((unsigned char)cmdList[cmdIndex].args[0])){
+               rVal = -1;
+               gError = 7;
+          }else{
+              rVal = 10;
+          }
+           break;
+       case 11:
+           if (fediDisp ((unsigned char)cmdList[cmdIndex].args[0])){
+               rVal = -1;
+               gError = 7;
+          }else{
+              rVal = 11;
+          }
+          break;
+      case 12:
+          fediFw();
+          rVal = 12;
+          break;
+      case 13:
+          fediZero();
+          rVal = 13;
+          break;
     }
     return rVal;
 }

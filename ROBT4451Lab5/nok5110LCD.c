@@ -11,9 +11,9 @@
 //  8-LIGHT  	-->  	no connection necessary
 //  7-SCLK  	-->  	MS430EVM  P4.3 or UCB1CLK
 //  6-DN(MOSI)  -->  	MS430EVM  P4.1 or UCB1SIMO
-//  5-D/C'  	-->  	MS430EVM  P4.2. 	Kept as I/O pin !!
+//  5-D/C'  	-->  	MS430EVM  P6.1
 //  4-RST'  	-->  	MS430EVM or supply VSS
-//  3-SCE'  	-->  	MS430EVM  P4.0.  	Kept as I/O pin !!
+//  3-SCE'  	-->  	MS430EVM  P4.0.  	Kept as I/O pin because we do our own slave selecting in user code
 //  2-GND  		-->  	MS430EVM or supply VSS
 //  1-VCC  		-->  	MS430EVM or supply 3V3
 
@@ -43,20 +43,19 @@ static unsigned char currentPixelDisplay[LCD_MAX_COL][LCD_MAX_ROW / LCD_ROW_IN_B
 void nokLcdWrite(char lcdByte, char cmdType) {
 	// check cmdType and output correct DAT_CMD signal to PORT4 based on it.
     if (cmdType == DC_DAT){    // Data NOT Command
-        P4OUT |= DAT_CMD;
+        _NOK_LCD_SET_DATA;
     }else{
-        P4OUT &= ~DAT_CMD;
+        _NOK_LCD_SET_CMD;
     }
 	// activate the SCE. the chip select
-    P4OUT &= ~SCE;     // active low
-
+    _NOK_LCD_SLAVE_SELECT;
 	// transmit lcdByte with spiTxByte
     UCB1IFG &= ~UCRXIFG;              // Clear receive flag cause it will be set because we never read RXBUF
     spiTxByte (lcdByte);
 	// wait for transmission  complete ?  If so, disable the SCE
     while (!(UCB1IFG & UCRXIFG)){};   // poll, waiting while last bit in last byte to be received. Now transfer is complete
     UCB1IFG &= ~UCRXIFG;              // Always a good idea to clear the flag
-    P4OUT |= SCE;                  // active low
+    _NOK_LCD_SLAVE_FREE;                // active low
 }
 
 /************************************************************************************
@@ -71,24 +70,17 @@ void nokLcdWrite(char lcdByte, char cmdType) {
 ************************************************************************************/
 void nokLcdInit(void) {
 
-
 	// gScutt.  do an SPI init with ucsiB1SpiInit  from ucsiSpi.h before this function call !!
-    P4SEL &= ~SCE;
-    P4SEL &= ~DAT_CMD;
-    P4DIR |= SCE;   // set pins to output
-    P4DIR |= DAT_CMD;
-    P4OUT |= SCE;   // 4.0
-    P4OUT |= DAT_CMD; // 4.2
-    P4OUT |= (SCE | DAT_CMD);	// Set DC' low - which means command not data, and CE Low which means chip select
+    _NOK_LCD_DIR_PINS;
 	// send initialization sequence to LCD module
-	nokLcdWrite(LCD_EXT_INSTR, DC_CMD);     // enables high level command set, horizontal addressing, power ON
+ 	nokLcdWrite(LCD_EXT_INSTR, DC_CMD);     // enables high level command set, horizontal addressing, power ON
 	nokLcdWrite(LCD_SET_OPVOLT, DC_CMD);    // low 6 bits sets voltage for contrast control, 5,4,3, and 2 are set, 60 out of 63
 	nokLcdWrite(LCD_SET_TEMPCTRL, DC_CMD);  //sets temperature coefficient but constant was wrong in header
 	nokLcdWrite(LCD_SET_SYSBIAS, DC_CMD);   // sets bias bit 0 and 2
 	nokLcdWrite(LCD_BASIC_INSTR, DC_CMD);   // switch to basic instruction, data and addresses
 	nokLcdWrite(LCD_NORMAL_DISP, DC_CMD);   // normal display mode, not cleared
-
 	nokLcdClear(); // clear the display
+	_NOK_LCD_SLAVE_FREE;
 }
 
 void nokLcdClear(void){
@@ -99,9 +91,9 @@ void nokLcdClear(void){
     unsigned char yPos;
     unsigned xPos;
 
-    P4OUT &= ~SCE;     // chip select active low
-    P4OUT |= DAT_CMD;   // lotsa data to follow
-  for (iPos =0; iPos < endPos; iPos +=1){
+    _NOK_LCD_SLAVE_SELECT;
+    _NOK_LCD_SET_DATA;
+    for (iPos =0; iPos < endPos; iPos +=1){
         //nokLcdWrite(0, DC_DAT);
         spiTxByte (0);
     }
@@ -109,8 +101,7 @@ void nokLcdClear(void){
     UCB1IFG &= ~UCRXIFG;              // Clear receive flag cause it will be set because we never read RXBUF
     while (!(UCB1IFG & UCRXIFG)){};   // poll, waiting while last bit in last byte to be received. Now transfer is complete
     UCB1IFG &= ~UCRXIFG;              // Always a good idea to clear the flag
-    P4OUT |= SCE;                  // chip select active low
-
+    _NOK_LCD_SLAVE_FREE;
     for (yPos =0; yPos < (LCD_MAX_ROW / LCD_ROW_IN_BANK); yPos +=1){
         for (xPos =0; xPos < LCD_MAX_COL; xPos +=1){
             currentPixelDisplay[xPos][yPos]=0;
@@ -232,12 +223,12 @@ signed char nokLcdDrawScrnLine (unsigned char linePos, unsigned char isVnotH){
     return 0;
 }
 
-signed char nokLcdDrawLine (unsigned char xStart, unsigned char yStart, unsigned char xEnd, unsigned char yEnd){
+signed char nokLcdDrawLine (unsigned char xStart, unsigned char yStart, unsigned char xEnd, unsigned char yEnd, unsigned char color){
 
     if ((xStart > 83) || (xEnd > 83) ||  (yStart > 47) || (yEnd > 47)){
         return -1;
     }
-    signed char xPos;    // use ints to guarantee promotion for intermediate math
+    signed char xPos;
     signed char yPos;
     signed char rise = yEnd - yStart;
     signed char run = xEnd - xStart;
@@ -257,7 +248,11 @@ signed char nokLcdDrawLine (unsigned char xStart, unsigned char yStart, unsigned
         }
         for (xPos = xStart; xPos != xEnd; xPos += incr){
             yPos = ((xPos * rise) + kindaB)/run;
-            nokLcdSetPixel((unsigned char) xPos, (unsigned char) yPos);
+            if (color){
+                nokLcdSetPixel((unsigned char) xPos, (unsigned char) yPos);
+            }else{
+                nokLcdClearPixel((unsigned char) xPos, (unsigned char) yPos);
+            }
         }
     }else{      // more pixels for rise than for run
         kindaB *= -1;
@@ -266,11 +261,59 @@ signed char nokLcdDrawLine (unsigned char xStart, unsigned char yStart, unsigned
         }
         for (yPos = yStart; yPos != yEnd; yPos += incr){
            xPos = ((yPos * run) + kindaB)/rise;
+           if (color){
            nokLcdSetPixel((unsigned char) xPos, (unsigned char) yPos);
+           }else{
+              nokLcdClearPixel((unsigned char) xPos, (unsigned char) yPos);
+            }
         }
     }
     return 0;
 }
+
+
+// draws an entire bar
+void nokDrawBar (unsigned char bank, unsigned char color){
+    nokLcdWrite(32, DC_CMD); // horizontal line
+    nokLcdWrite(LCD_SET_XRAM, DC_CMD);
+    nokLcdWrite(LCD_SET_YRAM + bank, DC_CMD);
+    unsigned char yByte;
+    unsigned char xPos;
+    if (color){
+        yByte = 255;
+    }else{
+        yByte =0;
+    }
+    for (xPos =0; xPos < LCD_MAX_COL; xPos +=1){
+        currentPixelDisplay [xPos][bank] = yByte;
+        nokLcdWrite(currentPixelDisplay [xPos][bank], DC_DAT);
+    }
+}
+
+// increments a bar from startX to endX
+void nokIncrBar (unsigned char bank, unsigned char startX, unsigned char endX){
+    nokLcdWrite(32, DC_CMD); // horizontal line
+    nokLcdWrite(LCD_SET_XRAM + startX, DC_CMD);
+    nokLcdWrite(LCD_SET_YRAM + bank, DC_CMD);
+    unsigned char xPos;
+    for (xPos =startX; xPos <= endX; xPos +=1){
+       currentPixelDisplay [xPos][bank] = 255;
+       nokLcdWrite(currentPixelDisplay [xPos][bank], DC_DAT);
+    }
+}
+
+// decrements a bar from endX to startX
+void nokDecrBar (unsigned char bank, unsigned char startX, unsigned char endX){
+    nokLcdWrite(32, DC_CMD); // horizontal line
+    nokLcdWrite(LCD_SET_XRAM + startX, DC_CMD);
+    nokLcdWrite(LCD_SET_YRAM + bank, DC_CMD);
+    unsigned char xPos;
+    for (xPos = startX; xPos <= endX; xPos +=1){
+       currentPixelDisplay [xPos][bank] = 0;
+       nokLcdWrite(currentPixelDisplay [xPos][bank], DC_DAT);
+    }
+}
+
 
 /************************************************************************************
 * Function: spiTxByte
