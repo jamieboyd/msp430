@@ -29,8 +29,7 @@
  * Using our non-standard angle convention, x = radius * sin (angle) and y = -radius *  cos (angle).
  *
  * To map encoder resolution (say 1150 *4 pulses per revolution or 360 * 4 pulses per revolution) to the 150 steps of the display
- * we use a ratio for integer division
- * that in integer math, first multiply pulse count by 3 and then divide by 23.
+ * we use a ratio for integer division.
  *
  */
 
@@ -40,12 +39,12 @@
 #define COUNTS_PER_REV          4600         // for the motor in 1985 lab 100 pulses/rev  x 11.5:1 gear box x 4 quadrature
 #define COUNTS_PER_DEGREE_NUM   9           // for integer math rounding. 360/4600 = 9/115
 #define COUNTS_PER_DEGREE_DENOM 115
-#define COUNTS_PER_HALF_DEGREE  6           // used for rounding counts to nearest degree. see fediRound
+#define COUNTS_PER_HALF_DEGREE  57           // relative to COUNTS_PER_DEGREE_DENOM. used for rounding counts to nearest degree. see simpleRound
 
-//#define COUNTS_PER_REV          1440          // for a 360 count/degree encoder. This includes quadrature.
-//#define COUNTS_PER_DEGREE_NUM   1             // easy when COUNTS_PER_REV divides 360
-//#define COUNTS_PER_DEGREE_DENOM 4             // COUNTS_PER_REV dvided by 360
-//#define COUNTS_PER_HALF_DEGREE 2           // for rounding counts to nearest degree. see fediRound
+//#define COUNTS_PER_REV            1440          // for a 360 count/degree encoder. This includes quadrature.
+//#define COUNTS_PER_DEGREE_NUM     1             // easy when COUNTS_PER_REV divides 360
+//#define COUNTS_PER_DEGREE_DENOM   4             // COUNTS_PER_REV dvided by 360
+//#define COUNTS_PER_HALF_DEGREE    8           //  cause 8/4 = 2. for rounding counts to nearest degree. see simpleRound
 
 
 #define NOK_LCD_X_CTR_L         42
@@ -63,13 +62,19 @@
 
 //#define NOK_LCD_MAP_NUM         5       // these form a divisor to map encoder counts per revolution to display steps
 //#define NOK_LCD_MAP_DENOM       48      // for 360 count/rev encoder with quadrature
+//#define NOK_LCD_HALF_STEP       24      // 5* ((1440/150)/2) simplifies nicely
+
 //#define NOK_LCD_PER_BAR_NUM         7     // 1440 counts / rev and 84 bars/rev
 //#define NOK_LCD_PER_BAR_DENOM       120
 
 #define NOK_LCD_MAP_NUM            3       // these form a divisor to map encoder counts per revolution to display steps
 #define NOK_LCD_MAP_DENOM          92      // for 1150 x 4 = 4600 count/rev encoder with quadrature
+#define NOK_LCD_HALF_STEP          46        // 3 * ((4600/150)/2)
+
 #define NOK_LCD_PER_BAR_NUM         4     // 4600 counts/rev / rev and 84 bars/rev
 #define NOK_LCD_PER_BAR_DENOM       219
+
+
 
 #define NOK_LCD_BAR_MAX             504     // count rolls over
 
@@ -80,6 +85,7 @@ void nokDrawAngle (signed int encoderCntMod);
 unsigned char nokDrawGetX (unsigned char pos);
 unsigned char nokDrawGetY (unsigned char pos);
 void nokDrawBars (signed long int posCount);
+signed int dispRound (signed int count
 
 /*************************** simpleRound ***************************************
   * -utility function to round count not just floor when dividing encoder counts

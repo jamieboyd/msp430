@@ -84,12 +84,14 @@ void nokDrawCircle (){
  * - Draws a line at an angle proportional to input, from center of screen to circle
  *  saves the previous position so we can "undraw" it
  *  if we wanted to be fancy schmancy we would choose start pixel according to quadrant, a ala draw circle
+ *  Arguments: 1
+ *  encoderCntMod the encoder count modulus the display count (150)
  * returns: none
  * Author: Jamie Boyd
  * Date: 2022/02/10 */
 void nokDrawAngle (signed int encoderCntMod){
     static signed int oldPos = -1;
-    signed int pos = (encoderCntMod * NOK_LCD_MAP_NUM)/NOK_LCD_MAP_DENOM;
+    signed int pos = dispRound (encoderCntMod);
     unsigned char xPos, yPos;
     if (pos < 0){
         pos += NOK_LCD_CIRC_STEPS;
@@ -204,9 +206,26 @@ void nokDrawBars (signed long int posCount){
 signed int simpleRound (signed int count){
     signed int rounded;
     if (count < 0){
-        rounded = (COUNTS_PER_DEGREE_NUM*(count - COUNTS_PER_HALF_DEGREE))/COUNTS_PER_DEGREE_DENOM;
+        rounded = ((COUNTS_PER_DEGREE_NUM *count) - COUNTS_PER_HALF_DEGREE)/COUNTS_PER_DEGREE_DENOM;
     }else{
-        rounded = (COUNTS_PER_DEGREE_NUM*(count + COUNTS_PER_HALF_DEGREE))/COUNTS_PER_DEGREE_DENOM;
+        rounded = ((COUNTS_PER_DEGREE_NUM*count) + COUNTS_PER_HALF_DEGREE)/COUNTS_PER_DEGREE_DENOM;
+    }
+    return rounded;
+}
+
+/*************************** dispRound ***************************************
+ * -utility function to round count to 150 positions of angle display.
+ * Arguments: 1
+ * argument 1: the count of the encoder, modulus counts_per_rev
+ * returns: result of the division, rounded to nearest whole number
+ * Author: Jamie Boyd
+ * Date: 2022/02/13 */
+signed int dispRound (signed int count){
+    signed int rounded;
+    if (count < 0){
+        rounded = ((NOK_LCD_MAP_NUM * count) - NOK_LCD_HALF_STEP)/NOK_LCD_MAP_DENOM;
+    }else{
+        rounded = ((NOK_LCD_MAP_NUM * count) + NOK_LCD_HALF_STEP)/NOK_LCD_MAP_DENOM;
     }
     return rounded;
 }
