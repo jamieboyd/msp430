@@ -4,13 +4,13 @@
  *
  *  Author: Jamie Boyd
  *  Created on: 2022/01/13
- *  Modified: 2022/01/15 by Jamie Boyd
+ *  Modified: 2022/01/3 by Jamie Boyd - added slots for fedi - the Friesen Encoder Display Interface)
  **************************************************************************************************/
 #ifndef LIBCMDINTERP_H_
 #define LIBCMDINTERP_H_
 
 #include <msp430.h>
-#include <stdio.h>// used ONLY for sprintf function
+#include <stdio.h>// used ONLY for sprintf function - tokenizing, str2num, etc. all handled
 #include <libUART1A.h>  // library to configure and use serial port
 
 #ifndef     NULL

@@ -3,6 +3,8 @@
  *
  *  Created on: Jan. 31, 2022
  *      Author: andrew_friesen
+ *      Modified: 2022/02/14 by Jamie Boyd
+ *          - swapped endian-ness of reading and writing bytes over SPI
  *
  *  Breakout board connections to MSP430
  *

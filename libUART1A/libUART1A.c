@@ -1,5 +1,5 @@
 /*************************************************************************************************
- * libUART1A.c
+ * liUART1A.c
  * - C implementation or source file for MSP430 usci UART A1
  * Has functions for sending/receiving from strings (null terminated character arrays)
  * and buffers (character arrays with specified lengths)

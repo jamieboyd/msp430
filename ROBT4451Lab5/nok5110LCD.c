@@ -83,6 +83,14 @@ void nokLcdInit(void) {
 	_NOK_LCD_SLAVE_FREE;
 }
 
+/**************************** nokLcdClear ********************************************************
+* Function: nokLcdClear
+* - Clears the LCD display and updates the currentPixelDisplay that shadows the screen display
+* arguments:none
+* returns: nothing
+* Author: Jamie Boyd
+* Date: 2022/01/20
+************************************************************************************/
 void nokLcdClear(void){
     nokLcdWrite(LCD_SET_YRAM, DC_CMD);
     nokLcdWrite(LCD_SET_XRAM, DC_CMD);
@@ -94,7 +102,6 @@ void nokLcdClear(void){
     _NOK_LCD_SLAVE_SELECT;
     _NOK_LCD_SET_DATA;
     for (iPos =0; iPos < endPos; iPos +=1){
-        //nokLcdWrite(0, DC_DAT);
         spiTxByte (0);
     }
     while (!(UCB1IFG & UCTXIFG)){};
@@ -186,6 +193,17 @@ unsigned char nokLcdClearPixel(unsigned char xPos, unsigned char yPos) {
     return 1;
 }
 
+/********************************nokLcdDrawScrnLine****************************************************
+* Function: nokLcdDrawScrnLine
+* -draws a horizontal or vertical line on the screen using vertical or horizontal addressing mode
+* arguments:2
+*   linePos - The horizontal or vertical line position
+*   isVnotH - 1 for a vertical line, 0 for a horizontal line
+* return: 0 if line was not out of range and was drawn, -1 if out of range
+* Author: Jamie Boyd
+* Date: 2022/01/
+* Modified: <date of any mods> usually taken care of by rev control
+************************************************************************************/
 signed char nokLcdDrawScrnLine (unsigned char linePos, unsigned char isVnotH){
     unsigned char bank;
     unsigned char yByte;
@@ -223,6 +241,18 @@ signed char nokLcdDrawScrnLine (unsigned char linePos, unsigned char isVnotH){
     return 0;
 }
 
+/********************************nokLcdDrawLine****************************************************
+* Function: nokLcdDrawLine
+* -draws a line between 2 starting points defined by x and y coordinates
+* arguments:4
+*   xStart - x coordinate of line starting point
+*   yStart - y coordinate of line starting point
+*   xEnd -  x coordinate of line ending  point
+*   yEnd - y coordinate of line ending  point
+* return: 0 if line was not out of range and was drawn, -1 if out of range
+* Author: Jamie Boyd
+* Date: 2022/01/
+************************************************************************************/
 signed char nokLcdDrawLine (unsigned char xStart, unsigned char yStart, unsigned char xEnd, unsigned char yEnd, unsigned char color){
 
     if ((xStart > 83) || (xEnd > 83) ||  (yStart > 47) || (yEnd > 47)){
@@ -272,7 +302,15 @@ signed char nokLcdDrawLine (unsigned char xStart, unsigned char yStart, unsigned
 }
 
 
-// draws an entire bar
+/********************************nokDrawBar****************************************************
+* Function: nokDrawBar
+* -draws a horizontal bar comprising a whole bank f pixels
+* arguments:2
+*   bank - from 0 to 5 which bank to use
+*   color - 1 to set pixels and 0 to clear. That's color in a 1-bit display
+* return: nothing
+* Author: Jamie Boyd
+* Date: 2022/02/13  */
 void nokDrawBar (unsigned char bank, unsigned char color){
     nokLcdWrite(32, DC_CMD); // horizontal line
     nokLcdWrite(LCD_SET_XRAM, DC_CMD);
@@ -290,7 +328,16 @@ void nokDrawBar (unsigned char bank, unsigned char color){
     }
 }
 
-// increments a bar from startX to endX
+/********************************nokIncrBar****************************************************
+* Function: nokIncrBar
+* - incremetns length of an already started bank
+* arguments:3
+*   bank - from 0 to 5 which bank to use
+*   startX - starting position to fill
+*   endX - ending position to fill
+* return: nothing
+* Author: Jamie Boyd
+* Date: 2022/02/13  */
 void nokIncrBar (unsigned char bank, unsigned char startX, unsigned char endX){
     nokLcdWrite(32, DC_CMD); // horizontal line
     nokLcdWrite(LCD_SET_XRAM + startX, DC_CMD);
@@ -302,7 +349,17 @@ void nokIncrBar (unsigned char bank, unsigned char startX, unsigned char endX){
     }
 }
 
-// decrements a bar from endX to startX
+
+/******************************** nokDecrBar****************************************************
+* Function: nokDecrBar
+* - decrements a already started bar from endX to startX
+* arguments:3
+*   bank - from 0 to 5 which bank to use
+*   startX - starting position to fill
+*   endX - ending position to fill
+* return: nothing
+* Author: Jamie Boyd
+* Date: 2022/02/13  */
 void nokDecrBar (unsigned char bank, unsigned char startX, unsigned char endX){
     nokLcdWrite(32, DC_CMD); // horizontal line
     nokLcdWrite(LCD_SET_XRAM + startX, DC_CMD);
@@ -313,7 +370,6 @@ void nokDecrBar (unsigned char bank, unsigned char startX, unsigned char endX){
        nokLcdWrite(currentPixelDisplay [xPos][bank], DC_DAT);
     }
 }
-
 
 /************************************************************************************
 * Function: spiTxByte

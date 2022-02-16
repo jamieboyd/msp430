@@ -1,22 +1,29 @@
+
 /*
- * nokLcdDraw.c
+ * nokLcdDraw.c  code to draw encoder angles and progress bars as part of the Friesen Encoder Display Interface
+ * Uses drawing primitives (lines, pixels) form the nok5110LCD library to draw bars, circles, and lines at paerticular angles
  *
- *  Created on: Feb. 7, 2022
- *      Author: jamie
- *      NOTE: non standard mapping of angular displacement.
- *      0 degrees position is at the TOP of the screen, not right edge. Positive rotation is in the clockwise direction.
- *
+ *  Created on: 2022/02/07
+ *      Author: jamie boyd
  */
 
 #include "nokLcdDraw.h"
-#include "nok5110LCD.h"
 
-//
+
+// this array contains a quadrant of a sine wave, scaled for 24 pixel radius and 2.4 degree resolution.
+// we get both sin and cosine out of this by using phase relationship
 static unsigned char sinArray [38] = {0, 7, 14, 21, 28, 35, 42, 49, 55, 62, 68, 75, 81,
                                87, 93, 99, 104, 110, 115, 120, 125, 129, 134, 138, 142,
                                145, 149, 152, 155, 157, 160, 162, 164, 165, 166, 167, 168, 168};
 
-// position must be 0 <= pos < NOK_LCD_CIRC_STEPS
+
+/*************************** nokDrawGetY ***************************************
+ * - with an angle defined by position (150->360 degrees), gets the y coordinate for position on the circle
+ * Arguments: 1
+ * argument 1: position around the circle,from 0-149
+ * returns: y position of point in circle at angle (pos/150)*360
+ * Author: Jamie Boyd
+ * Date: 2022/02/10 */
 unsigned char nokDrawGetY (unsigned char pos){
     signed int returnVal;
     if (pos <=  NOK_LCD_CIRC_Q1){
@@ -32,17 +39,16 @@ unsigned char nokDrawGetY (unsigned char pos){
             }
         }
     }
-    if (returnVal < 0){
-        returnVal =0;
-    }else{
-        if (returnVal > 47){
-            returnVal = 47;
-        }
-    }
     return returnVal;
 }
 
-// position must be 0 <= pos < NOK_LCD_CIRC_STEPS
+/*************************** nokDrawGetX ***************************************
+ * - with an angle defined by position (150->360 degrees), gets the x coordinate for position on the circle
+ * Arguments: 1
+ * argument 1: position around the circle,from 0-149 must be 0 <= pos < NOK_LCD_CIRC_STEPS
+ * returns: x position of point in circle at angle (pos/150)*360
+ * Author: Jamie Boyd
+ * Date: 2022/02/10 */
 unsigned char nokDrawGetX (unsigned char pos){
     if (pos <= NOK_LCD_CIRC_Q1){
         return NOK_LCD_X_CTR_R + (sinArray [pos]/NOK_LCD_ASP_RAT_DENOM);
@@ -59,7 +65,12 @@ unsigned char nokDrawGetX (unsigned char pos){
     }
 }
 
-// draws a circle outlining space where angles will be drawn
+/*************************** nokDrawCircle ***************************************
+ * - Draws a circle at radius 24 centered on the screen. Used to outline space where angle will be drawn
+ * Arguments: none
+ * returns: none
+ * Author: Jamie Boyd
+ * Date: 2022/02/10 */
 void nokDrawCircle (){
     unsigned char ii, xPos, yPos;
     for (ii =0; ii < NOK_LCD_CIRC_STEPS; ii += 1){
@@ -69,7 +80,13 @@ void nokDrawCircle (){
     }
 }
 
-
+/*************************** nokDrawAngle ***************************************
+ * - Draws a line at an angle proportional to input, from center of screen to circle
+ *  saves the previous position so we can "undraw" it
+ *  if we wanted to be fancy schmancy we would choose start pixel according to quadrant, a ala draw circle
+ * returns: none
+ * Author: Jamie Boyd
+ * Date: 2022/02/10 */
 void nokDrawAngle (signed int encoderCntMod){
     static signed int oldPos = -1;
     signed int pos = (encoderCntMod * NOK_LCD_MAP_NUM)/NOK_LCD_MAP_DENOM;
@@ -88,7 +105,12 @@ void nokDrawAngle (signed int encoderCntMod){
     }
 }
 
-
+/*************************** nokDrawBars ***************************************
+ * - Draws progress bars based on wheel position. The line width is a bank (8 pixels) wide. One revolution of the flywheel is
+ * represented as an activated row on the display. The length of the last row corresponds to angle around the circle
+ * returns: none
+ * Author: Jamie Boyd
+ * Date: 2022/02/12 */
 void nokDrawBars (signed long int posCount){
     static signed int lastPos = 0;
     static unsigned char lastY =0;
@@ -98,7 +120,7 @@ void nokDrawBars (signed long int posCount){
     unsigned char newX, newY;
     unsigned char iY;
 
-    tempY = (posCount / COUNTS_PER_REV);   // only 6 bars
+    tempY = (posCount / COUNTS_PER_REV);   // 6 bars
     tempY = tempY % 6;
     tempX =  posCount % COUNTS_PER_REV;
     tempX = ((tempX * NOK_LCD_PER_BAR_NUM)/NOK_LCD_PER_BAR_DENOM);
@@ -172,4 +194,19 @@ void nokDrawBars (signed long int posCount){
     }
 }
 
-
+/*************************** simpleRound ***************************************
+ * -utility function to round count to degrees not just floor when dividing
+ * Arguments: 1
+ * argument 1: the count of the encoder, modulus counts_per_rev
+ * returns: result of the division, rounded to nearest whole number
+ * Author: Jamie Boyd
+ * Date: 2022/02/13 */
+signed int simpleRound (signed int count){
+    signed int rounded;
+    if (count < 0){
+        rounded = (COUNTS_PER_DEGREE_NUM*(count - COUNTS_PER_HALF_DEGREE))/COUNTS_PER_DEGREE_DENOM;
+    }else{
+        rounded = (COUNTS_PER_DEGREE_NUM*(count + COUNTS_PER_HALF_DEGREE))/COUNTS_PER_DEGREE_DENOM;
+    }
+    return rounded;
+}
