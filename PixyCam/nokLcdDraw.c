@@ -12,7 +12,7 @@
 
 // this array contains a quadrant of a sine wave, scaled for 24 pixel radius and 2.4 degree resolution.
 // we get both sin and cosine out of this by using phase relationship
-static unsigned char sinArray [38] = {0, 7, 14, 21, 28, 35, 42, 49, 55, 62, 68, 75, 81,
+unsigned char sinArray [38] = {0, 7, 14, 21, 28, 35, 42, 49, 55, 62, 68, 75, 81,
                                87, 93, 99, 104, 110, 115, 120, 125, 129, 134, 138, 142,
                                145, 149, 152, 155, 157, 160, 162, 164, 165, 166, 167, 168, 168};
 
@@ -106,7 +106,6 @@ void nokDrawAngle (signed int encoderCntMod){
         oldPos = pos;
     }
 }
-
 
 /*************************** nokDrawBars ***************************************
  * - Draws progress bars based on wheel position. The line width is a bank (8 pixels) wide. One revolution of the flywheel is

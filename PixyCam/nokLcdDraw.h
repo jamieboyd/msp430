@@ -78,7 +78,7 @@
 
 #define NOK_LCD_BAR_MAX             504     // count rolls over
 
-
+extern unsigned char sinArray [38]; // too good to not use in other places
 
 void nokDrawCircle ();
 void nokDrawAngle (signed int encoderCntMod);
