@@ -140,8 +140,8 @@ int usciA1UartTxBuffer (char * buffer, unsigned int bufLen){
 }
 
 /******************** usciA1UartUbyte **********************************************
-* - writes a string representation of the decimal value of unsigned byte by doing the string
-* conversion into a buffer and then calling usciA1UartTxBuffer.
+* - writes a string representation of the decimal value of unsigned byte by doing the
+* string conversion into a buffer and then calling usciA1UartTxBuffer.
 * Arguments:1
 *   theByte - an unsigned byte to be transmitted
 * return: nothing

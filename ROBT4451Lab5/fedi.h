@@ -18,11 +18,10 @@
 #include "LS7366R.h"
 #include "libCmdInterp.h"
 #include "usciSpi.h"
-#include "stdio.h"
-
+#include <stdio.h>
 /************************* Program constants and Defines *********************************************
  * NOTE fedi also uses some constants related to the encoder defined in nokLcdDraw */
-#define _50MS_CNT 50000     // number of clock events for 50 ms timer. Make this smaller to get faster position updates
+#define _50MS_CNT 52429     // number of clock events for 50 ms timer using SMCLK.  2^20 * 50e-3
 #define FEDI_LINE 0         //  use the line display for angle
 #define FEDI_BARS 1         // use the progress display for angle and num rotations
 
