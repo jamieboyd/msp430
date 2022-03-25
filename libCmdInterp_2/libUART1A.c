@@ -15,8 +15,8 @@
 
 char rxBuffer [RX_BUF_SZ]; // buffer that receive data from usciA1UARTgets. referenced in header so can be accessed easily
 char intBuffer [LONG_INT_DEC_PLACES + 1];
-void (*rxIntFuncPtr)(char) = NULL; // pointer to function to run to get a byte from RXBUFF
-char (*txIntFuncPtr)(void) = NULL; // pointer to function to run to transfer a byte into TXBUFF
+unsigned char (*rxIntFuncPtr)(char) = NULL; // pointer to function to run to get a byte from RXBUFF
+char (*txIntFuncPtr)(unsigned char*) = NULL; // pointer to function to run to transfer a byte into TXBUFF
 
 
 /************************************************************************************
@@ -248,8 +248,8 @@ char * usciA1UartGets (char * rxString){
 * Author: Jamie Boyd
 * Date: 2022/02/13
 ************************************************************************************/
-void usciA1UartInstallRxInt (void(*interuptFuncPtr)(char  RXBUF)){
-    rxIntFuncPtr = interuptFuncPtr;
+void usciA1UartInstallRxInt (unsigned char (*interuptFuncPtr)(char  RXBUF)){
+    rxIntFuncPtr =interuptFuncPtr;
 }
 
 /************************************************************************************
@@ -277,7 +277,7 @@ void usciA1UartEnableRxInt (char isOnNotOFF){
 * Author: Jamie Boyd
 * Date: 2022/02/13
 ************************************************************************************/
-void usciA1UartInstallTxInt (char(*interuptFuncPtr)(void)){
+void usciA1UartInstallTxInt (char(*interuptFuncPtr)(unsigned char*)){
     txIntFuncPtr = interuptFuncPtr;
 }
 
@@ -307,19 +307,27 @@ void usciA1UartEnableTxInt (char isOnNotOFF){
 * returns: nothing
 * Author: Jamie Boyd
 * Date: 2022/02/13
+* Modified: 2022/03/22 by Jamie Boyd added parameter or return val to indicate wake from low power mode
 ************************************************************************************/
 #pragma vector = USCI_A1_VECTOR
 __interrupt void USCI_A1_ISR(void) {
+    unsigned char lpm =0;
   switch(__even_in_range(UCA1IV,4))
   {
   case 0:break;
   case 2:   // UCRXIFG - run installed function to deal with received character
-      (*rxIntFuncPtr)(UCA1RXBUF);
+      UCA1IV &= ~UCRXIFG;
+      lpm =(*rxIntFuncPtr)(UCA1RXBUF);
+
     break;
   case 4:   //UCTXIFG - transmit character returned from installed function
-      UCA1TXBUF =(*txIntFuncPtr)();
+      UCA1IV &= ~UCTXIFG;
+      UCA1TXBUF =(*txIntFuncPtr)(&lpm);
       break;
   default: break;
+  }
+  if (lpm){
+      __low_power_mode_off_on_exit();
   }
 }
 
@@ -333,7 +341,8 @@ __interrupt void USCI_A1_ISR(void) {
 * Author: Jamie Boyd
 * Date: 2022/02/13
 ************************************************************************************/
-void echoInterrupt (char  RXBUF){
+unsigned char  echoInterrupt (char  RXBUF){
     while (!(UCA1IFG & UCTXIFG)){};   // poll, waiting for an opportunity to send
     UCA1TXBUF = RXBUF;
+    return 0;
 }

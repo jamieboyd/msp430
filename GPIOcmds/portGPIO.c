@@ -4,38 +4,49 @@
  *  Created on: Mar. 17, 2022
  *      Author: jamie
  */
-#include <msp430.h>
-#include <stdlib.h>
-#include <stdio.h>
 
-#include "libCmdInterp.h"
 #include "portGPIO.h"
 
 unsigned char gPortCmdsErrOffset;
 
-int main (void){
-    gPortCmdsErrOffset = portInit ();
-
-
-}
-
-
-
+/************************************************************************************
+* Function: portInit
+* - adds commands and error messages, saves offset to start of error messages
+* Arguments: none
+* returns: offset to start of error messages
+* Author: Jamie Boyd
+* Date: 2022/03/17
+************************************************************************************/
 unsigned char portInit (void){
-    libCMD_addCmd (PORTSETUP, 3, 0, &portSetUp);                    // add port commands
-    libCMD_addCmd (PORTWRITEBITS, 3, 0, &portWriteBits);
-    libCMD_addCmd (PORTWRITEBYTE, 2, 0, &portWriteByte);
-    libCMD_addCmd (PORTREADBITS, 3, 0, &portReadBits);
+    libCMD_addCmd (PORTSETUP, 3, 0, R_NONE, &portSetUp);                    // add port commands
+    libCMD_addCmd (PORTWRITEBITS, 3, 0, R_NONE, &portWriteBits);
+    libCMD_addCmd (PORTWRITEBYTE, 2, 0, R_NONE, &portWriteByte);
+    libCMD_addCmd (PORTREN, 3, 0, R_NONE, &portRen);
+    libCMD_addCmd (PORTREADBITS, 2, 0, R_UCHAR, &portReadBits);
+
     unsigned char portCmdsErrOffset = libCMD_addErr (PORT_ERR0);      // add errors for port commands
     libCMD_addErr (PORT_ERR1);
     libCMD_addErr (PORT_ERR2);
     libCMD_addErr (PORT_ERR3);
     libCMD_addErr (PORT_ERR4);
     libCMD_addErr (PORT_ERR5);
+    libCMD_addErr (PORT_ERR6);
     return portCmdsErrOffset;
 }
 
+
 #ifdef f5529  // versions of functions with calculated offsets based on memory map of mspf5529 and other f series microcontrollers
+
+
+/************************************************************************************
+* Function: portSetUp
+* - sets up selected pins of a port for reading or writing.
+* Arguments: 1
+*   commandData pointer to parsed data: port number, 0 to read/1 to write, mask of selected bits
+* returns: error code as defined in portGPIO.h
+* Author: Jamie Boyd
+* Date: 2022/03/17
+************************************************************************************/
 unsigned char portSetUp (CMDdataPtr commandData){
     unsigned char rVal = 0;  // for success
     unsigned char thePort;
@@ -44,9 +55,9 @@ unsigned char portSetUp (CMDdataPtr commandData){
     unsigned char * portPtr;
     if ((commandData->args[0] >= 1) && (commandData->args[0] <= 8)){
         thePort = (unsigned char)commandData->args[0];
-        if ((commandData->args[1] >= 0)&& (commandData->args[1] <= 1)){
+        if ((commandData->args[1] >= 0) && (commandData->args[1] <= 1)){
             dir = (unsigned char)commandData->args[1];
-            if ((commandData->args[2] > 0) && (commandData->args[1] <= 255)){
+            if ((commandData->args[2] >=1) && (commandData->args[2] <= 255)){
                 mask = (unsigned char)commandData->args[2];
                 portPtr = (unsigned char *) PORT_REG_ADDR(thePort, DIR_REG);
                 if (dir){ // setting bits, outputs
@@ -55,13 +66,13 @@ unsigned char portSetUp (CMDdataPtr commandData){
                    *portPtr &= ~mask;
                }
            } else {
-               rVal = gPortCmdsErrOffset + 2;
+               rVal = gPortCmdsErrOffset + BAD_MASK;
            }
        } else{
-           rVal = gPortCmdsErrOffset + 1;
+           rVal = gPortCmdsErrOffset + BAD_DIR;
        }
     }else{
-        rVal = gPortCmdsErrOffset + 0;
+        rVal = gPortCmdsErrOffset + BAD_PORT;
     }
     return rVal;
 }
@@ -74,9 +85,9 @@ unsigned char portWriteBits (CMDdataPtr commandData){ // writes to selected bits
     unsigned char * portPtr;
     if ((commandData->args[0] >= 1) && (commandData->args[0] <= 8)){
         thePort = (unsigned char)commandData->args[0];
-        if ((commandData->args[1] >= 1)&& (commandData->args[1] <= 2)){
+        if ((commandData->args[1] >= 0) && (commandData->args[1] <= 2)){
             mode = (unsigned char)commandData->args[1];
-            if ((commandData->args[2] >= 1) && (commandData->args[2] <= 255)){
+            if ((commandData->args[2] >=0) && (commandData->args[2] <= 255)){
                 mask =  (unsigned char)commandData->args[2];
                 portPtr = (unsigned char *)PORT_REG_ADDR (thePort, OUTPUT_REG);
                 switch (mode){
@@ -91,13 +102,13 @@ unsigned char portWriteBits (CMDdataPtr commandData){ // writes to selected bits
                        break;
                    }
             }else{  // bad mask
-                rVal = gPortCmdsErrOffset + 2;
+                rVal = gPortCmdsErrOffset + BAD_MASK;
             }
         }else{      // bad mode
-            rVal = gPortCmdsErrOffset + 3;
+            rVal = gPortCmdsErrOffset + BAD_SET_MODE;
         }
     }else{  // bad port
-        rVal = gPortCmdsErrOffset + 0;
+        rVal = gPortCmdsErrOffset + BAD_PORT;
     }
     return rVal;
 }
@@ -114,55 +125,74 @@ unsigned char portWriteByte (CMDdataPtr commandData){ // writes a byte to a port
             portPtr = (unsigned char *)PORT_REG_ADDR (thePort, OUTPUT_REG);
             *portPtr = theByte;
         } else {  // bad data byte
-            rVal = gPortCmdsErrOffset + 4;
+            rVal = gPortCmdsErrOffset + BAD_DATA;
         }
     } else{  // bad port
-        rVal = gPortCmdsErrOffset + 0;
+        rVal = gPortCmdsErrOffset + BAD_PORT;
     }
     return rVal;
 }
 
-unsigned char portReadBits (CMDdataPtr commandData){ // reads selected bits from a port. 0:port number 1:mask 2:type (0 for binary, 1 for text)
-    static char rBuffer[40];
+unsigned char portReadBits (CMDdataPtr commandData){ // reads selected bits from a port. 0:port number, 1:mask
     unsigned char rVal = 0;  // for success
     unsigned char thePort;
-    unsigned char type;
     unsigned char mask;
-    unsigned char portVal;
     unsigned char * portPtr;
-    if ((commandData->args[0] >= 1) && (commandData->args[0] <= 8)){
+    unsigned char * rValPtr;
+    if ((commandData->args[0] >= 1) && (commandData->args[0] <= 8)){    // port
         thePort = (unsigned char)commandData->args[0];
-        if ((commandData->args[1] >= 1) && (commandData->args[1] <= 255)){
+        if ((commandData->args[1] >= 0) && (commandData->args[1] <= 255)){
             mask = (unsigned char)commandData->args[1];
-            if ((commandData->args[2] >= 0) && (commandData->args[2] <= 1)){
-                type = (unsigned char)commandData->args[2];
-                portPtr = (unsigned char *)PORT_REG_ADDR (thePort, INPUT_REG);
-                portVal = (*portPtr & mask);
-                if(type ==0){
-                  while (!(UCA1IFG & UCTXIFG)){};   // poll, waiting for an opportunity to send
-                  UCA1TXBUF = portVal;
-                }else{
-                    sprintf ((char *)rBuffer,"P%dIN = %d\0", thePort,portVal); // display first prompt for user
-                    usciA1UartTxString (rBuffer);
-                }
-                while (!(UCA1IFG & UCTXIFG)){};   // poll, waiting for an opportunity to send
-                    UCA1TXBUF = '\r';
-            }else{      // bad read type
-                rVal =gPortCmdsErrOffset + 5;
-            }
-          }else{    // bad mask
-              rVal =gPortCmdsErrOffset + 2;
-          }
+            portPtr = (unsigned char *)PORT_REG_ADDR (thePort, INPUT_REG);
+            rValPtr =  (unsigned char *)&commandData->result;
+            *rValPtr = (*portPtr & mask);
+            //commandData->result =(*portPtr & mask);
+        }else{      // bad mask
+            rVal =gPortCmdsErrOffset + BAD_MASK;
+        }
     }else{  // bad port
-        rVal = gPortCmdsErrOffset + 0;
+        rVal = gPortCmdsErrOffset + BAD_PORT;
     }
     return rVal;
 }
+
+unsigned char portRen (CMDdataPtr commandData){
+   unsigned char rVal = 0;  // for success
+   unsigned char thePort;
+   unsigned char mode;      // pull-down =0,pull-up = 1
+   unsigned char mask;
+   unsigned char * portPtr;
+   if ((commandData->args[0] >= 1) && (commandData->args[0] <= 8)){
+       thePort = (unsigned char)commandData->args[0];
+       if ((commandData->args[1] >= 0) && (commandData->args[1] <= 1)){
+           mode = (unsigned char)commandData->args[1];                      // 0 for pull-down, 1 for pull-up
+           if ((commandData->args[2] >=0) && (commandData->args[2] <= 255)){
+               mask =  (unsigned char)commandData->args[2];
+               portPtr = (unsigned char *)PORT_REG_ADDR (thePort, OUTPUT_REG);
+               if (mode == 0){      // pull-down, clear bit
+                   *portPtr &= ~mask;
+               }else{
+                   *portPtr |= mask;
+               }
+               portPtr = (unsigned char *)PORT_REG_ADDR (thePort, REN_REG);
+               *portPtr |= mask;
+           }else{                       // bad mask
+               rVal =gPortCmdsErrOffset + BAD_MASK;
+           }
+       }else{           // bad resistor mode
+           rVal =gPortCmdsErrOffset + BAD_RES_TYPE;
+       }
+   }else{           // bad port
+       rVal =gPortCmdsErrOffset + BAD_PORT;
+   }
+   return rVal;
+}
+
 #endif
 
 
 
-#ifndef f5529   // versions of functions that will work on other msp430 micro-controllers
+#ifndef f5529   // versions of functions that will work on other msp430 micro-controllers, with ugly switch for each port number
 //set up bits of a port for input or output 0:port number), 1:dir (0 for input, 1 for output), 2:mask
 unsigned char portSetup (CMDdataPtr commandData){
     unsigned char rVal = 0;  // for success
@@ -418,7 +448,7 @@ unsigned char portWriteByte (CMDdataPtr commandData){ // writes a byte to a port
     return rVal;
 }
 
-unsigned char portReadBits (CMDdataPtr commandData){ // reads selected bits from a port. 0:port number 1:mask 2:type (0 for binary, 1 for text)
+unsigned char portReadBits (CMDdataPtr commandData){ // reads selected bits from a port. 0:port number 1:mask 2:type
     unsigned char rVal = 0;  // for success
     unsigned char thePort;
     unsigned char type;

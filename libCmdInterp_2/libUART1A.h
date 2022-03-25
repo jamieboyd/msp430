@@ -103,7 +103,7 @@ char * usciA1UartGets (char * rxString);
  * returns:nothing
  * Author: Jamie Boyd
  * Date: 2022/02/13 */
-void usciA1UartInstallRxInt (void(*interuptFuncPtr)(char RXBUF));
+void usciA1UartInstallRxInt (unsigned char(*interuptFuncPtr)(char RXBUF));
 
 /* Function: usciA1UartEnableRxInt
 * - enables or disables interupts for character in Rx buffer
@@ -120,7 +120,7 @@ void usciA1UartEnableRxInt (char isOnNotOFF);
 * returns: unsigned char that will be put in the Tx buffer
 * Author: Jamie Boyd
 * Date: 2022/02/13  */
-void usciA1UartInstallTxInt (char(*interuptFuncPtr)(void));
+void usciA1UartInstallTxInt (char(*interuptFuncPtr)(unsigned char*));
 
 /* Function: usciA1UartEnableTxInt
 * - enables or disables interrupts for Tx buffer ready for a character
@@ -139,7 +139,7 @@ void usciA1UartEnableTxInt (char isOnNotOFF);
 * returns: nothing
 * Author: Jamie Boyd
 * Date: 2022/02/13 */
-void echoInterrupt (char  RXBUF);
+unsigned char echoInterrupt (char  RXBUF);
 
 
 #endif /* INCLUDE_LIBUART1A_H_ */
