@@ -60,7 +60,7 @@ unsigned char vnhGetPosition (CMDdataPtr commandData);
 unsigned char vnhSetPosition (CMDdataPtr commandData);
 
 
-unsigned char vnhSetSpeed (float speedRS);
+//unsigned char vnhSetSpeed (float speedRS);
 
 
 /*Raw vnh7070 Input control. INa, INb, SEL. ctrl can be in range 0x0->0x7.

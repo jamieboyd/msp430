@@ -50,12 +50,13 @@ unsigned char vnhInit (void){
     gPWMFreq =timerA0Init (10000);    // PWM output frequency 10 kHz, duty cycle initializes to 0
     timerA1Init (2, 0, 2, 7);       // 74898 Hz, constants used for speed measurements
 
+    /*
     // initialize timer 2  with interrupt every 10 ms
     TA2CTL = TASSEL_2 | ID_0 | MC_1 | TAIE;
     TA2CCR0 = _50MS_CNT - 1;                // set timer interval to 50 ms
     TA2CTL &= ~TAIFG;                       // clear flag
 
-
+*/
     libCMD_addCmd (PWM_FREQ, 1, 0, R_UINT, &vnhPWMfreq);
     libCMD_addCmd (PWM_DUTY, 1, 0, R_NONE, &vnhDutyCycle);
     libCMD_addCmd (SET_MTR, 1, 0, R_NONE, &vnhSetMtr);
@@ -150,15 +151,14 @@ unsigned char vnhPWMfreq (CMDdataPtr commandData){
     return rVal;
 }
 
-
+/*
 unsigned char vnhSetSpeed (float speedRS){
 // initialize timer 2  with interrupt every 10 ms
    TA2CTL = TASSEL_2 | ID_0 | MC_1 | TAIE;
    TA2CCR0 = _50MS_CNT - 1;                // set timer interval to 50 ms
    TA2CTL &= ~TAIFG;
    10485.8
-
-
+*/
 /************************ Functions called from command interpreter ********************************************/
 
 

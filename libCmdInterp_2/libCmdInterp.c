@@ -45,12 +45,12 @@ volatile unsigned char gStopPrinting=0;                   // set when someone wo
 * - Initializes UART and installs TX and RX interrupts, makes arrays for CMDs and results,
 *   and adds first 5 error messages
 * Arguments: 0
-* returns:  1 for success, 0 if could not allocate memory for needed arrays
+* returns: 0 for success, 1 if could not allocate memory for needed arrays
 * Author: Jamie Boyd
 * Date: 2022/03/16
 ************************************************************************************/
 unsigned char libCMD_init (){
-    unsigned char rVal = 1;     // successs
+    unsigned char rVal = 0;     // successs
     usciA1UartInit(19200); // initialise UART for 19200 Baud communication
     gCmdArrayPtr = (CMD *)malloc (INIT_SIZE * sizeof (CMD));  // array of CMD structures, can be resized
     gErrArrayPtr = (char **)malloc (INIT_SIZE * sizeof (char *)); // array of pointers to static error strings
@@ -69,7 +69,7 @@ unsigned char libCMD_init (){
         _enable_interrupts();                           // enable interrupts
     }else{
         usciA1UartTxString ("Command Interpreter failed to make buffers\r\0");
-        rVal = 0;
+        rVal = 1;
     }
     return rVal;
 }
@@ -166,22 +166,6 @@ void libCMD_run (void){
     }
 }
 
-/**************************** timer0A1Isr ***************************************
- * -timer interrupt that checks if command stings are ready, then parses, validates, and runs commands
- #pragma vector = TIMER0_A1_VECTOR
-__interrupt void timer0A1Isr(void) {
-    static unsigned char lastCommand =0;
-     if ((gCmdCnt > lastCommand) && (gCmdBufState > 0)){       // command buffer is not empty, so process a command
-         //TA0CTL &= ~TAIE;         // so no reentrant interrupts when we:
-         //_enable_interrupts();       // enable other interrupts, allowing this potentially slow interrupt to be interrupted by reading and writing
-         libCMD_doNextCommand ();
-         lastCommand +=1;
-
-        // TA0CTL |= TAIE;         // turn our own interrupts back on
-     }
-     TA0CTL &= ~TAIFG;
- }*/
-
 
 /*********************************** libCMD_doNextCommand *************************************************
 * Function: libCMD_doNextCommand
@@ -206,6 +190,7 @@ __interrupt void timer0A1Isr(void) {
     unsigned char errVal;     // 0 for success or an error code
     command theCommand;        // the function to run, with signature defined in typedef for command function
     unsigned int resultType =0;
+    float * dataPtr;
     if (gCmdBufState > BUFF_EMPTY){
         // see if command name exists
         aToken = libCMD_strTok (cmdLine, &contextPtr); // first token contains command name.
@@ -282,7 +267,8 @@ __interrupt void timer0A1Isr(void) {
             sprintf (resLine, "CMD %d->%ld\r\0",  gCmdCntOut, (signed long int)gCMDdata.result);
             break;
         case R_FLOAT:
-            sprintf (resLine, "CMD %d->%f\r\0",  gCmdCntOut, (float)gCMDdata.result);
+            dataPtr = (float *)&gCMDdata.result;
+            sprintf (resLine, "CMD %d->%.2f\r\0",  gCmdCntOut, *dataPtr);
             break;
         case R_STRING:
             sprintf (resLine, "CMD %d->%s\r\0",  gCmdCntOut, (char *)gCMDdata.result);
@@ -369,7 +355,7 @@ unsigned char libCMD_RxInterrupt (char  RXBUF){
                        rCharCount = 255;                              // reset char count
                        gInCmd += 1;                                   // increment gInCmd
                        cmdPtr += STR_SIZE;
-                       if (gInCmd == gNumCommands){
+                       if (gInCmd == BUFF_SIZE){
                            gInCmd = 0;
                            cmdPtr = gCMDstrs;
                        }
