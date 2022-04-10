@@ -11,6 +11,12 @@
 #include "libUART1A.h"
 #include "adc12.h"
 
+volatile unsigned int adc12Result;
+unsigned int ADC_DATA [ADC_SAMPLES];
+unsigned int gADCnumSamples = ADC_SAMPLES;
+
+unsigned char gSampMode = SAMP_MODE_PULSE;
+unsigned char gTrigMode = CONVERT_TRIG_TIMER;
 
 /************************************************************************************
 * Function: adc12Cfg
@@ -158,8 +164,6 @@ unsigned char adc12Cfg(const char * vref, char sampMode, char convTrigger, char 
     ADC12CTL1 |= ADC12CONSEQ_2;                     // Reapeated Single Channel
     ADC12CTL2 |= ADC12RES_2;                        // 12-Bit Resolution
     ADC12IE   |= ADC12IE0;                              // Enable interrupt
-
-
     ADC12CTL0 |= ADC12ENC;                          // Enable Conversion
     return errCode;
 }
@@ -197,19 +201,19 @@ interrupt void ADC12ISR(void) {
           if (gTrigMode == CONVERT_TRIG_TIMER){
               ADC12IFG &= ~ADC12IFG0;
               ADC_DATA [iADC++] = ADC12MEM0;
-              if (iADC == ADC_SAMPLES){
+              if (iADC == gADCnumSamples){
                   ADC12CTL0 &= ~ADC12ON;
-                  ADC12IE   &= ~ADC12IE0;
+                  TA0CTL &= ~MC__UPDOWN;
                   __low_power_mode_off_on_exit();
                   iADC = 0;
               }
           }
       }
       break;
-  case  8: break;                           // Vector  8:  ADC12IFG1
-  case 10: break;                           // Vector 10:  ADC12IFG2
-  case 12:  break;                                // Vector 12:  ADC12IFG3
-  case 14: break;                           // Vector 14:  ADC12IFG4
+    case  8: break;                           // Vector  8:  ADC12IFG1
+    case 10: break;                           // Vector 10:  ADC12IFG2
+    case 12: break;                           // Vector 12:  ADC12IFG3
+    case 14: break;                           // Vector 14:  ADC12IFG4
     case 16: break;                           // Vector 16:  ADC12IFG5
     case 18: break;                           // Vector 18:  ADC12IFG6
     case 20: break;                           // Vector 20:  ADC12IFG7

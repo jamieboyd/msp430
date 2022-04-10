@@ -1,6 +1,5 @@
  #include <msp430.h>
 #include "libUART1A.h"
-#include "UcsControl.h"
 #include "BinaryCmdInterp.h"
 
 // array of CMD structures
@@ -20,7 +19,7 @@ volatile unsigned char gResBufState = 0;      // 0 means empty, 1 means inProgre
 
 
 void binInterp_init (){
-    usciA1UartInstallRxInt (&binInterp_RxInterupt);   // install UART interrupts - make sure UART is inited with your choice of baud
+    usciA1UartInstallRxInt (&binInterp_RxInterupt);   // install UART interrupts - make sure UART has been inited with your choice of baud
     usciA1UartInstallTxInt (&binInterp_TxInterrupt);
     usciA1UartEnableRxInt (1);                      // enable Rx interrupt right away
     usciA1UartEnableTxInt (0);

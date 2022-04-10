@@ -9,7 +9,7 @@
 #define BINARYCMDINTERP_H_
 
 #define     CMD_LIST_SIZE   32      // arrays of command structures that we know about, room for  CMD_LIST_SIZE commands from Host.
-#define     DATA_SIZE       12      // this many bytes available for each input command and output results. should be lots
+#define     DATA_SIZE       20      // this many bytes available for each input command and output results. should be lots
 #define     BUFF_SIZE       6      // size of buffers for commands and results. Make these bigger
 
 #define     BUFF_EMPTY      0       // Buffer is empty

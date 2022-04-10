@@ -1,3 +1,11 @@
+/**
+ * main.c
+ * for ADC lab.
+ * do DC voltmeter with gSampMode = SAMP_MODE_EXTENDED or SAMP_MODE_PULSE  and gTrigMode = CONVERT_TRIG_SOFT
+ * do 10 kHz oscilloscope with gSampMode = SAMP_MODE_PULSE  and gTrigMode = CONVERT_TRIG_TIMER
+ */
+
+
 #include <msp430.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -5,12 +13,7 @@
 #include "libUART1A.h"
 
 
-/**
- * main.c
- */
-
-unsigned char gSampMode = SAMP_MODE_PULSE;
-unsigned char gTrigMode = CONVERT_TRIG_TIMER;
+char resultBuf [40];
 
 unsigned int ADC_DATA [ADC_SAMPLES];
 
@@ -18,8 +21,8 @@ volatile unsigned int adc12Result;
 
 int main(void) {
     float ADCval;
-    char resultBuf [40];
     WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
+
     if (gTrigMode == CONVERT_TRIG_SOFT){
         TA0CTL = TASSEL__ACLK | ID_0 | MC__UP | TAIE;
         TA0CCR0 = 8192;                // set timer interval to 250 ms
@@ -45,8 +48,8 @@ int main(void) {
         while (1){
         __low_power_mode_0();
         _nop();
-        ADC12IE   |= ADC12IE0;
         ADC12CTL0 |= ADC12ON;
+        TA0CTL |= MC__UP;
         }
     }
 }
@@ -61,73 +64,3 @@ __interrupt void TimerA0 (void){
     }
         TA0CTL &= ~TAIFG;              // clear flag
 }
-
-
-
-/*
-// Timer1 interrupt service routine
-#pragma vector=TIMER1_A0_VECTOR
-__interrupt void TIMER1_A0_ISR(void)
-#elif defined(__GNUC__)
-void __attribute__ ((interrupt(TIMER1_A0_VECTOR))) TIMER1_A0_ISR (void)
-#else
-#error Compiler not supported!
-#endif
-{
-  P1OUT ^= 0x01;                            // Toggle P1.0
-  TA1CCR0 += 50000;                         // Add Offset to CCR0
-}
-
-
-
-     *
-
-
-    float ADCval;
-    unsigned int chanErr;
-#ifdef EXTENDED
-   chanErr = adc12Cfg("3V3", 1, 0, 1);
-   char resultBuf [40];
-   WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
-  // initialize timer 0 for printing results with interrupt every 100 ms
-  TA0CTL = TASSEL__ACLK | ID_0 | MC_1 | TAIE;
-  TA0CCR0 = 8192;                // set timer interval to 250 ms
-  TA0CTL &= ~TAIFG;              // clear flag
-#endif
-#ifdef PULSE
-	 chanErr = adc12Cfg("3V3", 0, 1, 1);
-#endif
-	 if (!(chanErr)){
-	 usciA1UartInit(19200); // initialise UART for 19200 Baud communication
-	 __enable_interrupt();
-	 while (1){
-      __low_power_mode_0();
-
-#ifdef EXTENDED
-	     ADCval = ((float)adc12Result/4096.0) * 3.3;
-	     sprintf (resultBuf, "ADC val = %.3f volts.\r", ADCval);
-	     usciA1UartTxString(resultBuf);
-#endif
-#ifdef PULSE
-	     _nop();
-	     ADC12IE   |= ADC12IE0;
-	     ADC12CTL0 |= ADC12ON;
-	     ADC12CTL0 |= ADC12SC;
-
-#endif
-     }
-	}
-	return 0;
-}
-
-
-#pragma vector = TIMER0_A1_VECTOR
-__interrupt void TimerA0 (void){
-#ifdef EXTENDED
-    adc12SampSWConv ();
-#endif
-
-    TA0CTL &= ~TAIFG;              // clear flag
-}
-
-*/
