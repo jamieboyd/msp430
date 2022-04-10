@@ -6,8 +6,7 @@
  * everything else is done with interrupts.
  *
  */
-int main(void)
-{
+int main(void) {
  	WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
 	if (libCMD_init () ==0){
 	    gPortCmdsErrOffset = portInit ();
