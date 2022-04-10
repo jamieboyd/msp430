@@ -36,7 +36,6 @@
 ************************************************************************************/
 unsigned char adc12Cfg(const char * vref, char sampMode, char convTrigger, char adcChannel)  {
 
-
     /*configure REF MODULE.
     see user manual 28.2.3  and the REF Module in section 26
     Since tte MSP430F5529 has a separate REF Module, we are using it directly
@@ -120,25 +119,6 @@ unsigned char adc12Cfg(const char * vref, char sampMode, char convTrigger, char 
             }
         }
     }
-    /*
-    if (strcmp(vref, "3V3"))    {
-        ADC12MCTL0 |= ADC12SREF_1;                      // select VR+ = VREF+
-        REFCTL0 |= (REFMSTR + REFON);                   //  enable reference control. Use REF module registers.
-        if (!strcmp(vref, "1V5")){
-            REFCTL0 |= REFVSEL_0;
-        }
-        else if(!strcmp(vref, "2V0")){
-            REFCTL0 |= REFVSEL_1;
-        }
-        else if(!strcmp(vref, "2V5")){
-            REFCTL0 |= REFVSEL_2;
-        }
-    }
-    else if (!strcmp(vref, "3V3"))  {
-        ADC12MCTL0 |= ADC12SREF_0;
-        REFCTL0 &= ~(REFMSTR + REFON);              //  disable REF control. Use the ADC12A to provide 3V3
-    }
-    */
     /**************************** configure clock source and divider ******************************
      * The ADC12CLK is used both as the conversion clock and to generate the sampling period when
      * the pulse sampling mode is selected. */
@@ -156,19 +136,24 @@ unsigned char adc12Cfg(const char * vref, char sampMode, char convTrigger, char 
         4) The Timer_B Output Unit 1
       **********************************************************************************************/
     ADC12CTL1 &= ~ADC12SHS_3;                    // clear bits before we set them
-    if(convTrigger){
-        ADC12CTL1 |= ADC12SHS_1;                    // select timer. assumes timer is setup (TImer A CCR1??)
+    if(convTrigger == CONVERT_TRIG_TIMER){
+        ADC12CTL1 |= ADC12SHS_1;                    // select timer. assumes timer is setup (Timer A1 CCR1??)
+
     }
-    else{
+    else{                                           // CONVERT_TRIG_SOFT convert trigger set in main code
         ADC12CTL1 |= ADC12SHS_0;                    // select SW bit ADC12SHS_0= 0, so this does nothing but looks nice
     }
 
     /********************************* Sampling Mode *********************************************** */
-    if (sampMode) {
-        ADC12CTL1  |= ADC12SHP;                     // extended mode. SAMPCON follows the trigger signal width
-        // SET ADC12SHT1,0 IN ADC12CTL0
+    // NOTE only lower half of channels are done here, should check which channel is used and do other half
+    if (sampMode == SAMP_MODE_EXTENDED) {       // extended mode. SAMPCON follows the trigger signal width
+        ADC12CTL1 &= ~ADC12SHS_3;
+        ADC12CTL1  |= ADC12SHP;
     } else{
         ADC12CTL1  &= ~ADC12SHP;                    // pulse sampling sampling. SAMPCON will be controlled by ADC12SHT1x, ADC12SHT10x. Bits Not implemented here.
+        ADC12CTL0 &= ~ADC12SHT0_15;                 // clear bits
+        ADC12CTL0 |= ADC12SHT0_3;                   //  32/5E6 = 6.4 uS.
+        //ADC12CTL0 |= ADC12MSC;
     }
     ADC12CTL1 |= ADC12CONSEQ_2;                     // Reapeated Single Channel
     ADC12CTL2 |= ADC12RES_2;                        // 12-Bit Resolution
@@ -197,12 +182,44 @@ void adc12SampSWConv(void){
 
 
 #pragma vector = ADC12_VECTOR
-interrupt void eocADC12ISR(void)    {
+interrupt void ADC12ISR(void) {
 
-    // needs to be modified for channel selection with a proper interrupt handler.
-
-    // currently just stores MEM0 to global variable adc12Result. Good enough for the DC Voltmeter ...
-    adc12Result = ADC12MEM0;
-    __low_power_mode_off_on_exit();
-
+  static unsigned int iADC = 0;
+  switch(__even_in_range(ADC12IV,34)) {
+  case  0: break;                           // Vector  0:  No interrupt
+  case  2: break;                           // Vector  2:  ADC overflow
+  case  4: break;                           // Vector  4:  ADC timing overflow
+  case  6:                                   // Vector  6:  ADC12IFG0
+      if (gTrigMode == CONVERT_TRIG_SOFT){
+          __low_power_mode_off_on_exit();
+          adc12Result = ADC12MEM0;
+      }else{
+          if (gTrigMode == CONVERT_TRIG_TIMER){
+              ADC12IFG &= ~ADC12IFG0;
+              ADC_DATA [iADC++] = ADC12MEM0;
+              if (iADC == ADC_SAMPLES){
+                  ADC12CTL0 &= ~ADC12ON;
+                  ADC12IE   &= ~ADC12IE0;
+                  __low_power_mode_off_on_exit();
+                  iADC = 0;
+              }
+          }
+      }
+      break;
+  case  8: break;                           // Vector  8:  ADC12IFG1
+  case 10: break;                           // Vector 10:  ADC12IFG2
+  case 12:  break;                                // Vector 12:  ADC12IFG3
+  case 14: break;                           // Vector 14:  ADC12IFG4
+    case 16: break;                           // Vector 16:  ADC12IFG5
+    case 18: break;                           // Vector 18:  ADC12IFG6
+    case 20: break;                           // Vector 20:  ADC12IFG7
+    case 22: break;                           // Vector 22:  ADC12IFG8
+    case 24: break;                           // Vector 24:  ADC12IFG9
+    case 26: break;                           // Vector 26:  ADC12IFG10
+    case 28: break;                           // Vector 28:  ADC12IFG11
+    case 30: break;                           // Vector 30:  ADC12IFG12
+    case 32: break;                           // Vector 32:  ADC12IFG13
+    case 34: break;                           // Vector 34:  ADC12IFG14
+    default: break;
+    }
 }

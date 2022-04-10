@@ -12,12 +12,14 @@
 #define     CONVERT_TRIG_TIMER       1
 #define     CONVERT_TRIG_SOFT        0
 #define     SAMP_MODE_EXTENDED       1
-#define     SAMPE_MODE_PULSE         0
+#define     SAMP_MODE_PULSE          0
 
+#define     ADC_SAMPLES             200
 
 extern volatile unsigned int adc12Result; // public global variable declarations
-
-
+extern unsigned char gSampMode;
+extern unsigned char gTrigMode;
+extern unsigned int ADC_DATA [];
 
 #define SAMPLE_ADC 1000   // delay between ADC12SC H-->L
 
