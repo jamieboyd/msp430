@@ -15,8 +15,12 @@
 
 char rxBuffer [RX_BUF_SZ]; // buffer that receive data from usciA1UARTgets. referenced in header so can be accessed easily
 char intBuffer [LONG_INT_DEC_PLACES + 1];
-unsigned char (*rxIntFuncPtr)(char) = NULL; // pointer to function to run to get a byte from RXBUFF
-char (*txIntFuncPtr)(unsigned char*) = NULL; // pointer to function to run to transfer a byte into TXBUFF
+
+rxIntFunc rxIntFuncPtr = NULL;
+txIntFunc txIntFuncPtr = NULL;
+
+//unsigned char (*rxIntFuncPtr)(char) = NULL; // pointer to function to run to get a byte from RXBUFF
+//char (*txIntFuncPtr)(unsigned char*) = NULL; // pointer to function to run to transfer a byte into TXBUFF
 
 
 /************************************************************************************
@@ -248,8 +252,8 @@ char * usciA1UartGets (char * rxString){
 * Author: Jamie Boyd
 * Date: 2022/02/13
 ************************************************************************************/
-void usciA1UartInstallRxInt (unsigned char (*interuptFuncPtr)(char  RXBUF)){
-    rxIntFuncPtr =interuptFuncPtr;
+void usciA1UartInstallRxInt (rxIntFunc rxFunc){
+    rxIntFuncPtr =rxFunc;
 }
 
 /************************************************************************************
@@ -277,8 +281,8 @@ void usciA1UartEnableRxInt (char isOnNotOFF){
 * Author: Jamie Boyd
 * Date: 2022/02/13
 ************************************************************************************/
-void usciA1UartInstallTxInt (char(*interuptFuncPtr)(unsigned char*)){
-    txIntFuncPtr = interuptFuncPtr;
+void usciA1UartInstallTxInt (txIntFunc txFunc){
+    txIntFuncPtr = txFunc;
 }
 
 /************************************************************************************

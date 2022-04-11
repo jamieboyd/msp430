@@ -11,12 +11,13 @@
 
 
 int main(void) {
+    WDTCTL = WDTPW | WDTHOLD;   // stop watchdog timer
     usciA1UartInit(19200);
     binInterp_init ();
-    binInterp_addCmd (2, &scopeInit);       // unsigned char channel number
-    binInterp_addCmd (2, &scopeSetVref);
-    binInterp_addCmd (6, &scopeSetSampRate);
-    binInterp_addCmd (4, &scopeSetNumSamp);
+    binInterp_addCmd (2, &scopeInit);       // 0 + unsigned char channel number
+    binInterp_addCmd (2, &scopeSetVref);    // 1 + unsigned char vref code
+    binInterp_addCmd (4, &scopeSetSampRate);// 2 + space byte + unsigned int CCR0
+    binInterp_addCmd (4, &scopeSetNumSamp); // 3 + space byte + unsigned int number of samples
     binInterp_addCmd (1, &scopeGetData);
     __enable_interrupt();
     binInterp_run ();
@@ -51,6 +52,11 @@ unsigned char scopeInit  (unsigned char * inputData, unsigned char * outputResul
  * 1 byte output data is errorCode (0 = o.k, 1 = vRef code out of range)
  */
 unsigned char scopeSetVref  (unsigned char * inputData, unsigned char * outputResults){
+    unsigned char turnOn = 0;
+    if (ADC12CTL0 & ADC12ENC){
+        turnOn = 1;
+        ADC12CTL0 &= ~ADC12ENC;
+    }
     unsigned char err =0;
     if (inputData [1] > 3){
         err =1;
@@ -74,31 +80,27 @@ unsigned char scopeSetVref  (unsigned char * inputData, unsigned char * outputRe
             }
         }
     }
+    if (turnOn){
+        ADC12CTL0 |= ADC12ENC;
+    }
     outputResults [0] = 4;
     outputResults [1] = err;
     return 1;
 }
 
-/**************************** Set sampling rate  *******************************
- * 6 bytes input data is [0] unsigned char FuncNumber = 2 [1] pad byte [2-5] long int sampling rate
- * 4 byte output data [0] error code 91 =too slow, 2=too fast), [1] padding, [2-3] unsigned in value of CCR0
- * use 2^20 Hz SMCLCK. fastest freq to try is 104 kHz, equals 10 CPU clock ticks
+/**************************** Set sampling feequency  *******************************
+ * 4 bytes input data is [0] unsigned char FuncNumber = 2 [1] pad byte [2-3] unsigned int CCR0 value
+ * 1 byte output data [0] error code 1 =too  fast)
+ * using 2^20 Hz SMCLCK. fastest freq to try is 104 kHz, equals 10 CPU clock ticks
  * slowest frequency is 2^20/65535  = 17 Hz*/
 unsigned char scopeSetSampRate (unsigned char * inputData, unsigned char * outputResults){
     unsigned char err = 0;
-    unsigned long * sampRatePtr = (unsigned long *)&inputData [2];
-    if (*sampRatePtr < 17){
-        err =1;
+    unsigned int * sampRatePtr = (unsigned int *)&inputData [2];
+    if (*sampRatePtr < 10){
+        err = 1 ;    // too fast
     }else{
-        if (*sampRatePtr > 104000){
-            err = 2;
-        }
-    }
-    if (err ==0){
-        TA0CCR0 = (0x100000/ *sampRatePtr) -1;
+        TA0CCR0 = *sampRatePtr;
         TA0CCR1 = TA0CCR0/2;
-        unsigned int *  timValPtr = (unsigned int * ) &outputResults [2];
-        * timValPtr = TA0CCR0;
     }
     outputResults [0] = 4;
     outputResults [1] = err;
@@ -135,16 +137,17 @@ unsigned char scopeGetData (unsigned char * inputData, unsigned char * outputRes
 
      usciA1UartInstallTxInt (&binInterp_TxInterrupt);
      usciA1UartEnableTxInt (1);
-     return 0;      // we sent the data, nothing more to add!
+     return 0;
 }
 
 
 char DATA_TxInterrupt (unsigned char* lpm){
-    static unsigned char tCharCount=0;
+    static unsigned int tCharCount=0;
     unsigned char * buffer = (unsigned char *) ADC_DATA;
     unsigned char rChar = buffer [tCharCount++];
-    if (tCharCount == (2*gADCnumSamples)){
+    if (tCharCount == 400){ //2*gADCnumSamples
         *lpm = 1;
+        tCharCount=0;
         usciA1UartEnableTxInt (0);
     }
     return rChar;

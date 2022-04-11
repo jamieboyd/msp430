@@ -24,10 +24,12 @@
 
 #ifndef NULL                                            // NULL is defined in stdint.h, but it the only thing we use from there
 #define NULL 0
-
+#endif
 #define LONG_INT_DEC_PLACES 10    // biggest signed long int is a 10 digit number used to TX a big decimal number
 
-#endif
+
+typedef unsigned char (*rxIntFunc)(char);
+typedef char (*txIntFunc)(unsigned char*);
 
 /******************************* Function Headers **********************************/
 /* Function: usciA1UartInit
