@@ -189,6 +189,7 @@ void adc12SampSWConv(void){
 interrupt void ADC12ISR(void) {
 
   static unsigned int iADC = 0;
+  unsigned int thisVal;
   switch(__even_in_range(ADC12IV,34)) {
   case  0: break;                           // Vector  0:  No interrupt
   case  2: break;                           // Vector  2:  ADC overflow
@@ -201,11 +202,11 @@ interrupt void ADC12ISR(void) {
           if (gTrigMode == CONVERT_TRIG_TIMER){
               ADC12IFG &= ~ADC12IFG0;
               ADC_DATA [iADC++] = ADC12MEM0;
-              if (iADC == gADCnumSamples){
-                  ADC12CTL0 &= ~ADC12ON;
-                  TA0CTL &= ~MC__UPDOWN;
-                  __low_power_mode_off_on_exit();
-                  iADC = 0;
+                  if (iADC == gADCnumSamples){
+                      ADC12CTL0 &= ~ADC12ENC;
+                      TA0CTL &= ~MC__UPDOWN;
+                      __low_power_mode_off_on_exit();
+                      iADC = 0;
               }
           }
       }

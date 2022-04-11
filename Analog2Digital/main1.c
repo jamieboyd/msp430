@@ -25,7 +25,7 @@ int main(void) {
 
 /* 2 bytes input data is [0] unsigned char FuncNumber = 0 [1] unsigned char channel number.
  * 1 byte output data is errorCode (0 = o.k, 1 = channel out of range)
- * initial voltage range is 3.3V, but can be changed
+ * initial voltage range is 2 V, but can be changed
  * initial sampling rate is 10kHz but can be changed from 16 to 104
  * initial sample size is 200, but this can be decreased
  */
@@ -40,7 +40,7 @@ unsigned char scopeInit  (unsigned char * inputData, unsigned char * outputResul
         TA0CCTL1 = OUTMOD_3;                        //Set, Reset on TA1. trigger sets on TA0CCR0
         TA0CCR0 = 104;                              //2^20 Hz SMCLCK * 105 = 10ksps = 100 samples of 100Hz wave
         TA0CCR1 = 52;                                // trigger for ADC resets on TA0CCR1
-        adc12Cfg("3V3", SAMP_MODE_PULSE, CONVERT_TRIG_TIMER, inputData[1]);
+        adc12Cfg("2V0", SAMP_MODE_PULSE, CONVERT_TRIG_TIMER, inputData[1]);
     }
     outputResults [0] = 4;
     outputResults [1] = err;
@@ -61,12 +61,14 @@ unsigned char scopeSetVref  (unsigned char * inputData, unsigned char * outputRe
     if (inputData [1] > 3){
         err =1;
     }else{
+        ADC12MCTL0 &= ~ADC12SREF_7;
         if (inputData[1] == 3) {                   //   VR+ = AVCC+ and not VREF+
             ADC12MCTL0 |= ADC12SREF_0;
             REFCTL0 &= ~(REFMSTR + REFON);              //  disable REF control. Use the ADC12A to provide 3V3
         }else{                                          // we are using one of the voltage references
             ADC12MCTL0 |= ADC12SREF_1;                      // select VR+ = VREF+
             REFCTL0 |= (REFMSTR + REFON);                   //  enable reference control. Use REF module registers.
+            REFCTL0 &= ~REFVSEL_3;
             if (inputData[1] == 0){
                REFCTL0 |= REFVSEL_0;
             }else{
@@ -88,7 +90,7 @@ unsigned char scopeSetVref  (unsigned char * inputData, unsigned char * outputRe
     return 1;
 }
 
-/**************************** Set sampling feequency  *******************************
+/**************************** Set sampling frequency  *******************************
  * 4 bytes input data is [0] unsigned char FuncNumber = 2 [1] pad byte [2-3] unsigned int CCR0 value
  * 1 byte output data [0] error code 1 =too  fast)
  * using 2^20 Hz SMCLCK. fastest freq to try is 104 kHz, equals 10 CPU clock ticks
@@ -127,15 +129,14 @@ unsigned char scopeSetNumSamp (unsigned char * inputData, unsigned char * output
  * 1 byte input data - [0] unsigned char FuncNumber = 4  everything else should already be configured
  * no output data - we send the data ourselves with a different interrupt function */
 unsigned char scopeGetData (unsigned char * inputData, unsigned char * outputResults){
-    ADC12CTL0 |= ADC12ON;
+    ADC12CTL0 |= ADC12ENC;
     TA0CTL |= MC__UP;
      __low_power_mode_0();  // when we wake up, we should have new data, send it
      usciA1UartEnableTxInt (0);
      usciA1UartInstallTxInt (&DATA_TxInterrupt);
      usciA1UartEnableTxInt (1);
      __low_power_mode_0();  // when we wake up, data has been sent
-
-     usciA1UartInstallTxInt (&binInterp_TxInterrupt);
+     usciA1UartInstallTxInt (&binInterp_TxInterrupt); // re-enable usual tx functions
      usciA1UartEnableTxInt (1);
      return 0;
 }
@@ -145,7 +146,7 @@ char DATA_TxInterrupt (unsigned char* lpm){
     static unsigned int tCharCount=0;
     unsigned char * buffer = (unsigned char *) ADC_DATA;
     unsigned char rChar = buffer [tCharCount++];
-    if (tCharCount == 400){ //2*gADCnumSamples
+    if (tCharCount >= (2*gADCnumSamples)){
         *lpm = 1;
         tCharCount=0;
         usciA1UartEnableTxInt (0);
