@@ -4,7 +4,7 @@
  * We use P3.0 for the INa (clockwise) signal and P3.1 for the INb (counter-clockwise) signal to the motor driver, and 3.2 for select Pin
  * We do velocity measurements with Timer A1 on pins 2.0 (channel A) and 2.2 (Channel B)
  * We do position measurements with LS7366 encoder break-out over SPI
- *  S1 Slave Select ->  P7.0 GPIO
+ *  *  S1 Slave Select ->  P7.0 GPIO
  *  MOSI            ->  P4.1 UCB1MOSI
  *  MISO            ->  P4.2 UCB1MISO
  *  SCLK            ->  P4.3 UCB1CLK
@@ -20,7 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libCmdInterp.h>
-#include "PWMTimerA0.h"
+#include <PWMTimerA1.h>
+
 #include "velocityTimerA1.h"
 #include "fedi.h"
 
