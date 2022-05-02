@@ -3,9 +3,8 @@
 /**
  * main.c
  */
-int main(void)
-{
-      	WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
+int main(void) {
+    WDTCTL = WDTPW | WDTHOLD;	// stop watchdog timer
 /* Set up PWM output on timer A1, CCR1 on P2.0. We want 10kHz PWM update rate. clk src = SMCLCK, DIV = 1. CCR0 = 104
  * Map 0-3V3 signal to 0-104 PWM output. PWM output, TA1CCR1 = ADCValue/39   */
 	P2DIR |= BIT0;         // output pin 2.0    TA1.1 pin
